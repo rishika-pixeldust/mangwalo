@@ -101,6 +101,7 @@ Riverpod providers (feed filter, suggestions, settings)
 | [Local AI note](docs/local-ai-note.md) | Helper type, boundary, fallback, honest limitations |
 | [ADR-0001](docs/adr/0001-local-first-marketplace-slice.md) | Local-first architecture decision record |
 | [Demo script](docs/demo-script.md) | Timed 3-minute demo walkthrough |
+| [Demo video](docs/media/mangwalo-demo.mp4) | 2:17 narrated walkthrough — what MangWalo is + the four Lab 1 pillars |
 
 ## Non-goals & honesty notes
 

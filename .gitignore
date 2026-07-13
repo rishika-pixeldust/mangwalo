@@ -53,3 +53,9 @@ secrets.*
 
 # Local agent tooling
 .claude/
+
+# Demo-video pipeline intermediates (regenerate via tool/demo/build_video.sh)
+tool/demo/goldens/
+tool/demo/slides/
+tool/demo/audio/
+tool/demo/segments/
