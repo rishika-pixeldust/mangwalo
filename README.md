@@ -3,6 +3,8 @@
 > **Maang lo** — just ask for it. A local-first noticeboard to **borrow and lend everyday
 > things within one Mumbai neighborhood**, with an on-device AI listing helper.
 > Built for **MAL Lab 1: Flutter & Foundations**.
+>
+> **Live: [mangwalo.vercel.app](https://mangwalo.vercel.app)**
 
 Your neighbor owns the drill you need twice a year. You own the pressure cooker they
 need for one festival week. MangWalo is the noticeboard in between — offers ("I can
@@ -64,6 +66,9 @@ flutter analyze
 
 # Production build (CanvasKit bundled locally — no CDN dependency)
 flutter build web --release --no-web-resources-cdn   # output in build/web
+
+# Deploy (static bundle → https://mangwalo.vercel.app)
+cd build/web && vercel deploy --prod
 ```
 
 ## Architecture at a glance
