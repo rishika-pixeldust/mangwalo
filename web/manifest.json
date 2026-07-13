@@ -1,0 +1,35 @@
+{
+    "name": "MangWalo — neighborhood borrow & lend",
+    "short_name": "MangWalo",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#FFF8F3",
+    "theme_color": "#B84A26",
+    "description": "Maang lo — a local-first noticeboard to borrow and lend everyday things within your Mumbai neighborhood. No account, no server: everything stays on your device.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

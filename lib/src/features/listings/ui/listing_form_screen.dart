@@ -1,0 +1,425 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../../core/clock.dart';
+import '../../../core/images.dart';
+import '../../../core/validation/privacy_scanner.dart';
+import '../../../core/validation/sanitizer.dart';
+import '../../../core/validation/validators.dart';
+import '../../ai/local_ai_service.dart';
+import '../../settings/application/settings_controller.dart';
+import '../application/listing_providers.dart';
+import '../application/listing_suggestion_controller.dart';
+import '../domain/listing.dart';
+import 'widgets/ai_helper_panel.dart';
+
+/// Create/edit form. The on-device helper suggests, the user decides:
+/// suggestions only ever fill a field through an explicit chip tap.
+class ListingFormScreen extends ConsumerStatefulWidget {
+  const ListingFormScreen({super.key, this.listingId});
+
+  final String? listingId;
+
+  @override
+  ConsumerState<ListingFormScreen> createState() => _ListingFormScreenState();
+}
+
+class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _areaController = TextEditingController();
+  final _contactNoteController = TextEditingController();
+
+  ListingType _type = ListingType.offer;
+  Category? _category;
+  ContactChannel _contactChannel = ContactChannel.societyBoard;
+  final Set<String> _conditionTags = {};
+  int? _suggestedDurationDays;
+  String? _photoBase64;
+  bool _pickingPhoto = false;
+  List<PrivacyWarning> _warnings = const [];
+  Listing? _existing;
+
+  @override
+  void initState() {
+    super.initState();
+    final id = widget.listingId;
+    if (id != null) {
+      final existing = ref.read(listingByIdProvider(id));
+      if (existing != null) {
+        _existing = existing;
+        _type = existing.type;
+        _category = existing.category;
+        _contactChannel = existing.contactChannel;
+        _conditionTags.addAll(existing.conditionTags);
+        _suggestedDurationDays = existing.suggestedDurationDays;
+        _photoBase64 = existing.photoBase64;
+        _titleController.text = existing.title;
+        _descriptionController.text = existing.description;
+        _areaController.text = existing.area;
+        _contactNoteController.text = existing.contactNote;
+        // Prefilled text gets the same privacy screening as typed text.
+        _warnings = _scanFreeText();
+      }
+    }
+  }
+
+  /// Privacy-scan every free-text field the user could leak PII through.
+  List<PrivacyWarning> _scanFreeText() => PrivacyScanner.scan(
+      '${_titleController.text}\n${_descriptionController.text}');
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _areaController.dispose();
+    _contactNoteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickPhoto() async {
+    setState(() => _pickingPhoto = true);
+    try {
+      final encoded = await pickAndEncodeListingPhoto();
+      if (encoded != null && mounted) {
+        setState(() => _photoBase64 = encoded);
+      }
+    } finally {
+      if (mounted) setState(() => _pickingPhoto = false);
+    }
+  }
+
+  void _onDescriptionChanged(String text) {
+    setState(() => _warnings = _scanFreeText());
+    ref
+        .read(listingSuggestionProvider.notifier)
+        .onDescriptionChanged(text, listingType: _type);
+  }
+
+  Future<void> _save() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final now = ref.read(nowProvider)();
+    final neighborhood = ref.read(settingsProvider).neighborhood ?? '';
+    final repo = ref.read(listingRepositoryProvider);
+
+    final title = sanitize(_titleController.text, maxLength: Validators.titleMax);
+    final description = sanitize(_descriptionController.text,
+        maxLength: Validators.descriptionMax, multiline: true);
+    final area = sanitize(_areaController.text, maxLength: Validators.areaMax);
+    final contactNote = sanitize(_contactNoteController.text,
+        maxLength: Validators.contactNoteMax);
+    final category = _category ?? Category.other;
+    final tags = _conditionTags.toList()..sort();
+
+    final existing = _existing;
+    final listing = existing != null
+        ? existing.copyWith(
+            type: _type,
+            title: title,
+            description: description,
+            category: category,
+            conditionTags: tags,
+            area: area,
+            contactChannel: _contactChannel,
+            contactNote: contactNote,
+            suggestedDurationDays: _suggestedDurationDays,
+            photoBase64: _photoBase64,
+            updatedAt: now,
+          )
+        : Listing(
+            id: const Uuid().v4(),
+            type: _type,
+            title: title,
+            description: description,
+            category: category,
+            conditionTags: tags,
+            area: area,
+            neighborhood: neighborhood,
+            contactChannel: _contactChannel,
+            contactNote: contactNote,
+            suggestedDurationDays: _suggestedDurationDays,
+            photoBase64: _photoBase64,
+            createdAt: now,
+            updatedAt: now,
+            isMine: true,
+          );
+
+    await repo.put(listing);
+    if (mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(existing == null
+                ? 'Listing added to your noticeboard'
+                : 'Listing updated')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final suggestion = ref.watch(listingSuggestionProvider);
+    final engineInfo = ref.watch(localAiServiceProvider).engineInfo;
+
+    // Announce new suggestions to assistive tech — but only when the set
+    // materially changes, never per keystroke.
+    ref.listen(listingSuggestionProvider, (previous, next) {
+      if (previous != next && !next.isEmpty) {
+        SemanticsService.sendAnnouncement(
+            View.of(context),
+            'Suggestions available below the description field',
+            TextDirection.ltr);
+      }
+    });
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.listingId == null ? 'New listing' : 'Edit listing'),
+      ),
+      body: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text('What kind of listing?', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SegmentedButton<ListingType>(
+                segments: const [
+                  ButtonSegment(
+                    value: ListingType.offer,
+                    label: Text('I can lend'),
+                    icon: Icon(Icons.volunteer_activism_outlined),
+                  ),
+                  ButtonSegment(
+                    value: ListingType.request,
+                    label: Text('I need'),
+                    icon: Icon(Icons.front_hand_outlined),
+                  ),
+                ],
+                selected: {_type},
+                onSelectionChanged: (selection) {
+                  setState(() => _type = selection.first);
+                  // Re-run suggestions: title phrasing depends on the type.
+                  _onDescriptionChanged(_descriptionController.text);
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _descriptionController,
+              onChanged: _onDescriptionChanged,
+              validator: Validators.description,
+              maxLength: Validators.descriptionMax,
+              maxLines: 4,
+              textInputAction: TextInputAction.newline,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                hintText: 'e.g. Bosch drill machine, thoda purana but '
+                    'works fine. Weekends preferred.',
+                helperText: 'Describe the item — suggestions appear as '
+                    'you type.',
+                helperMaxLines: 2,
+              ),
+            ),
+            for (final warning in _warnings)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                // liveRegion: assistive tech announces the warning the
+                // moment it appears — safety messages must not be
+                // visual-only (WCAG 4.1.3).
+                child: Semantics(
+                  liveRegion: true,
+                  container: true,
+                  child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.tertiaryContainer,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.privacy_tip_outlined,
+                          size: 18,
+                          color: theme.colorScheme.onTertiaryContainer),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${warning.message} (found "${warning.matchedText}")',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onTertiaryContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  ),
+                ),
+              ),
+            AiHelperPanel(
+              suggestion: suggestion,
+              engineInfo: engineInfo,
+              titleApplied:
+                  _titleController.text == suggestion.suggestedTitle,
+              categoryApplied: _category != null &&
+                  _category == suggestion.suggestedCategory,
+              appliedTags: {
+                for (final tag in suggestion.conditionTags)
+                  if (_conditionTags.contains(tag.label)) tag,
+              },
+              durationApplied: _suggestedDurationDays != null &&
+                  _suggestedDurationDays ==
+                      suggestion.suggestedLoanDuration?.days,
+              onApplyTitle: (title) =>
+                  setState(() => _titleController.text = title),
+              onApplyCategory: () => setState(
+                  () => _category = suggestion.suggestedCategory),
+              onToggleTag: (tag) => setState(() {
+                if (!_conditionTags.remove(tag.label)) {
+                  _conditionTags.add(tag.label);
+                }
+              }),
+              onApplyDuration: () => setState(() => _suggestedDurationDays =
+                  suggestion.suggestedLoanDuration?.days),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _titleController,
+              validator: Validators.title,
+              maxLength: Validators.titleMax,
+              onChanged: (_) => setState(() => _warnings = _scanFreeText()),
+              decoration: const InputDecoration(
+                labelText: 'Title',
+                hintText: 'Short and clear, e.g. "Bosch Drill Machine"',
+              ),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<Category>(
+              // Recreate the field when a suggestion chip changes _category:
+              // FormField state doesn't re-read initialValue on rebuild, and
+              // a stale null value would fail validation despite the visible
+              // selection.
+              key: ValueKey(_category),
+              initialValue: _category,
+              decoration: const InputDecoration(labelText: 'Category'),
+              items: [
+                for (final c in Category.values)
+                  DropdownMenuItem(value: c, child: Text(c.label)),
+              ],
+              validator: (value) =>
+                  value == null ? 'Pick a category.' : null,
+              onChanged: (value) => setState(() => _category = value),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _areaController,
+              validator: Validators.area,
+              maxLength: Validators.areaMax,
+              decoration: const InputDecoration(
+                labelText: 'Nearby landmark',
+                hintText: 'e.g. Near Joggers Park gate',
+                helperText: 'Landmark only — never an exact address. '
+                    'Exact locations stay private.',
+                helperMaxLines: 2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<ContactChannel>(
+              initialValue: _contactChannel,
+              decoration: const InputDecoration(labelText: 'Contact via'),
+              items: [
+                for (final c in ContactChannel.values)
+                  DropdownMenuItem(value: c, child: Text(c.label)),
+              ],
+              onChanged: (value) => setState(
+                  () => _contactChannel = value ?? _contactChannel),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _contactNoteController,
+              validator: Validators.contactNote,
+              maxLength: Validators.contactNoteMax,
+              decoration: const InputDecoration(
+                labelText: 'Contact note (optional)',
+                hintText: 'e.g. Evenings only, ask for the Sharmas',
+                helperText: 'Stored only on this device.',
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('Photo (optional)', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 8),
+            if (_photoBase64 != null) ...[
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Semantics(
+                      label: 'Selected item photo',
+                      image: true,
+                      child: Image.memory(
+                        base64Decode(_photoBase64!),
+                        height: 160,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        gaplessPlayback: true,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: IconButton.filledTonal(
+                      tooltip: 'Remove photo',
+                      icon: const Icon(Icons.close),
+                      onPressed: () => setState(() => _photoBase64 = null),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+            OutlinedButton.icon(
+              onPressed: _pickingPhoto ? null : _pickPhoto,
+              icon: const Icon(Icons.add_a_photo_outlined),
+              label: Text(_pickingPhoto
+                  ? 'Preparing photo…'
+                  : _photoBase64 == null
+                      ? 'Add a photo'
+                      : 'Replace photo'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Downscaled and stored only on this device.',
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: _save,
+              icon: const Icon(Icons.check),
+              label: Text(
+                  widget.listingId == null ? 'Add to noticeboard' : 'Save'),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(52),
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+}
