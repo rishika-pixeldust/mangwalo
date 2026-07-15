@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/constants.dart';
 import 'core/widgets/phone_frame.dart';
-import 'features/listings/ui/feed_screen.dart';
+import 'features/home/home_shell.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/settings/application/settings_controller.dart';
 import 'theme/app_theme.dart';
@@ -25,7 +25,7 @@ class MangWaloApp extends ConsumerWidget {
       builder: (context, child) =>
           PhoneFrame(child: child ?? const SizedBox.shrink()),
       home: settings.onboardingDone
-          ? const FeedScreen()
+          ? const HomeShell()
           : const OnboardingScreen(),
     );
   }

@@ -1,10 +1,11 @@
-// Demo-video frame capture. NOT part of the regular test suite (lives
+// Demo/preview frame capture. NOT part of the regular test suite (lives
 // outside test/), run explicitly:
 //
 //   flutter test tool/demo/capture_screens_test.dart --update-goldens
 //
 // Renders real app screens at 3x phone resolution with real fonts and
-// writes them to tool/demo/goldens/*.png for the demo video pipeline.
+// writes them to tool/demo/goldens/*.png for the demo video + preview
+// gallery pipeline.
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mangwalo/src/core/clock.dart';
+import 'package:mangwalo/src/features/home/home_shell.dart';
 import 'package:mangwalo/src/features/listings/application/listing_providers.dart';
 import 'package:mangwalo/src/features/listings/data/in_memory_listing_repository.dart';
 import 'package:mangwalo/src/features/listings/data/seed_data.dart';
@@ -23,27 +25,28 @@ import 'package:mangwalo/src/features/onboarding/onboarding_screen.dart';
 import 'package:mangwalo/src/features/settings/application/settings_controller.dart';
 import 'package:mangwalo/src/features/settings/data/hive_settings_repository.dart';
 import 'package:mangwalo/src/features/settings/domain/app_settings.dart';
-import 'package:mangwalo/src/features/settings/ui/settings_screen.dart';
 import 'package:mangwalo/src/theme/app_theme.dart';
 
-const _fontDir =
+const _sdkFonts =
     '/Users/rishika/Documents/development/flutter/bin/cache/artifacts/material_fonts';
+const _appFonts = '/Users/rishika/StudioProjects/mal/assets/fonts';
 
 Future<void> _loadFonts() async {
-  Future<ByteData> read(String file) async {
-    final bytes = await File('$_fontDir/$file').readAsBytes();
+  Future<ByteData> read(String path) async {
+    final bytes = await File(path).readAsBytes();
     return ByteData.view(bytes.buffer);
   }
 
-  final roboto = FontLoader('Roboto')
-    ..addFont(read('Roboto-Regular.ttf'))
-    ..addFont(read('Roboto-Medium.ttf'))
-    ..addFont(read('Roboto-Bold.ttf'))
-    ..addFont(read('Roboto-Light.ttf'));
-  await roboto.load();
+  final jakarta = FontLoader('PlusJakartaSans')
+    ..addFont(read('$_appFonts/PlusJakartaSans-Regular.ttf'))
+    ..addFont(read('$_appFonts/PlusJakartaSans-Medium.ttf'))
+    ..addFont(read('$_appFonts/PlusJakartaSans-SemiBold.ttf'))
+    ..addFont(read('$_appFonts/PlusJakartaSans-Bold.ttf'))
+    ..addFont(read('$_appFonts/PlusJakartaSans-ExtraBold.ttf'));
+  await jakarta.load();
 
   final icons = FontLoader('MaterialIcons')
-    ..addFont(read('MaterialIcons-Regular.otf'));
+    ..addFont(read('$_sdkFonts/MaterialIcons-Regular.otf'));
   await icons.load();
 }
 
@@ -60,7 +63,7 @@ Listing _mine() => Listing(
       area: 'Near Bandra Talao',
       neighborhood: 'Bandra West',
       lendingState: LendingState.lentOut,
-      dueDate: DateTime(2026, 7, 20),
+      dueDate: DateTime(2026, 7, 18),
       borrowerName: 'Priya',
       suggestedDurationDays: 7,
       createdAt: _now,
@@ -68,8 +71,12 @@ Listing _mine() => Listing(
       isMine: true,
     );
 
-Widget _app(Widget home,
-    {required InMemoryListingRepository repo, double textScale = 1.0}) {
+Widget _app(
+  Widget home, {
+  required InMemoryListingRepository repo,
+  double textScale = 1.0,
+  ThemeMode mode = ThemeMode.light,
+}) {
   final settingsRepo = InMemorySettingsRepository();
   settingsRepo.save(
       const AppSettings(neighborhood: 'Bandra West', seedVersion: 1));
@@ -83,7 +90,7 @@ Widget _app(Widget home,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.light,
+      themeMode: mode,
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context)
             .copyWith(textScaler: TextScaler.linear(textScale)),
@@ -94,7 +101,7 @@ Widget _app(Widget home,
   );
 }
 
-InMemoryListingRepository _board({bool withMine = false}) =>
+InMemoryListingRepository _board({bool withMine = true}) =>
     InMemoryListingRepository([
       ...buildSampleListings(neighborhood: 'Bandra West', now: _now),
       if (withMine) _mine(),
@@ -103,90 +110,97 @@ InMemoryListingRepository _board({bool withMine = false}) =>
 void main() {
   setUpAll(_loadFonts);
 
-  Future<void> capture(WidgetTester tester, Widget widget, String name,
-      {int settles = 3}) async {
+  void frame(WidgetTester tester) {
     tester.view.physicalSize = const Size(1290, 2796);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(widget);
-    for (var i = 0; i < settles; i++) {
-      await tester.pump(const Duration(milliseconds: 120));
-    }
-    await expectLater(
-        find.byType(MaterialApp), matchesGoldenFile('goldens/$name.png'));
   }
 
+  Future<void> settle(WidgetTester tester, {int pumps = 3}) async {
+    for (var i = 0; i < pumps; i++) {
+      await tester.pump(const Duration(milliseconds: 140));
+    }
+  }
+
+  Future<void> shoot(WidgetTester tester, String name) => expectLater(
+      find.byType(MaterialApp), matchesGoldenFile('goldens/$name.png'));
+
   testWidgets('01 onboarding', (tester) async {
-    await capture(
-        tester, _app(const OnboardingScreen(), repo: _board()), '01_onboarding');
+    frame(tester);
+    await tester.pumpWidget(_app(const OnboardingScreen(), repo: _board()));
+    await settle(tester);
+    await shoot(tester, '01_onboarding');
   });
 
-  testWidgets('02 feed', (tester) async {
-    await capture(
-        tester, _app(const FeedScreen(), repo: _board(withMine: true)),
-        '02_feed');
+  testWidgets('02 board feed', (tester) async {
+    frame(tester);
+    await tester.pumpWidget(_app(const HomeShell(), repo: _board()));
+    await settle(tester);
+    await shoot(tester, '02_feed');
   });
 
-  testWidgets('03 my items', (tester) async {
-    tester.view.physicalSize = const Size(1290, 2796);
-    tester.view.devicePixelRatio = 3.0;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(
-        _app(const FeedScreen(), repo: _board(withMine: true)));
-    await tester.pump(const Duration(milliseconds: 120));
+  testWidgets('03 my items + hero', (tester) async {
+    frame(tester);
+    await tester.pumpWidget(_app(const HomeShell(), repo: _board()));
+    await settle(tester);
     await tester.tap(find.text('My items'));
-    await tester.pump(const Duration(milliseconds: 400));
-    await expectLater(
-        find.byType(MaterialApp), matchesGoldenFile('goldens/03_myitems.png'));
+    await settle(tester);
+    await shoot(tester, '03_myitems');
   });
 
   testWidgets('04 AI suggestions', (tester) async {
-    tester.view.physicalSize = const Size(1290, 2796);
-    tester.view.devicePixelRatio = 3.0;
-    addTearDown(tester.view.reset);
+    frame(tester);
     await tester.pumpWidget(_app(const ListingFormScreen(), repo: _board()));
-    await tester.pump(const Duration(milliseconds: 120));
+    await settle(tester);
     await tester.enterText(find.byType(TextFormField).first,
         'bosch ka drill machine, thoda purana but works fine, weekends only');
-    // Ride out the 450 ms suggestion debounce.
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(milliseconds: 200));
-    await expectLater(find.byType(MaterialApp),
-        matchesGoldenFile('goldens/04_ai_suggestions.png'));
+    await shoot(tester, '04_ai_suggestions');
   });
 
   testWidgets('05 privacy warnings', (tester) async {
-    tester.view.physicalSize = const Size(1290, 2796);
-    tester.view.devicePixelRatio = 3.0;
-    addTearDown(tester.view.reset);
+    frame(tester);
     await tester.pumpWidget(_app(const ListingFormScreen(), repo: _board()));
-    await tester.pump(const Duration(milliseconds: 120));
+    await settle(tester);
     await tester.enterText(find.byType(TextFormField).first,
         'mixer grinder available, call me on 98200 12345, flat no 402');
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(milliseconds: 200));
-    await expectLater(find.byType(MaterialApp),
-        matchesGoldenFile('goldens/05_privacy_warning.png'));
+    await shoot(tester, '05_privacy_warning');
   });
 
   testWidgets('06 lending detail', (tester) async {
-    await capture(
-        tester,
-        _app(const ListingDetailScreen(listingId: 'mine-1'),
-            repo: _board(withMine: true)),
-        '06_detail_lending');
+    frame(tester);
+    await tester.pumpWidget(_app(
+        const ListingDetailScreen(listingId: 'mine-1'),
+        repo: _board()));
+    await settle(tester);
+    await shoot(tester, '06_detail_lending');
   });
 
-  testWidgets('07 text scale 2x', (tester) async {
-    await capture(
-        tester,
-        _app(const FeedScreen(), repo: _board(withMine: true),
-            textScale: 1.8),
-        '07_a11y_scale');
+  testWidgets('07 text scale', (tester) async {
+    frame(tester);
+    await tester.pumpWidget(
+        _app(const FeedScreen(), repo: _board(), textScale: 1.8));
+    await settle(tester);
+    await shoot(tester, '07_a11y_scale');
   });
 
-  testWidgets('08 settings / data control', (tester) async {
-    await capture(
-        tester, _app(const SettingsScreen(), repo: _board()), '08_settings');
+  testWidgets('08 settings', (tester) async {
+    frame(tester);
+    await tester.pumpWidget(_app(const HomeShell(), repo: _board()));
+    await settle(tester);
+    await tester.tap(find.text('Settings'));
+    await settle(tester);
+    await shoot(tester, '08_settings');
+  });
+
+  testWidgets('09 board feed dark', (tester) async {
+    frame(tester);
+    await tester.pumpWidget(
+        _app(const HomeShell(), repo: _board(), mode: ThemeMode.dark));
+    await settle(tester);
+    await shoot(tester, '09_feed_dark');
   });
 }

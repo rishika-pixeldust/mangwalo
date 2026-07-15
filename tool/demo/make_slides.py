@@ -2,22 +2,23 @@
 """Compose 1920x1080 demo-video slides from the golden app frames."""
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-FONTS = "/Users/rishika/Documents/development/flutter/bin/cache/artifacts/material_fonts"
+FONTS = "assets/fonts"
 GOLD = "tool/demo/goldens"
 OUT = "tool/demo/slides"
 
-CREAM = (255, 248, 243)
-TERRA = (184, 74, 38)
-TERRA_SOFT = (232, 201, 188)
-INK = (42, 26, 18)
-INK_SOFT = (110, 84, 70)
+# Warm Ledger tokens (docs/design-system.md)
+CREAM = (243, 238, 230)
+TERRA = (242, 121, 60)
+TERRA_SOFT = (252, 228, 213)
+INK = (32, 27, 22)
+INK_SOFT = (138, 129, 120)
 
-heading_f = ImageFont.truetype(f"{FONTS}/Roboto-Bold.ttf", 78)
-eyebrow_f = ImageFont.truetype(f"{FONTS}/Roboto-Medium.ttf", 30)
-bullet_f = ImageFont.truetype(f"{FONTS}/Roboto-Regular.ttf", 36)
-small_f = ImageFont.truetype(f"{FONTS}/Roboto-Medium.ttf", 26)
-brand_f = ImageFont.truetype(f"{FONTS}/Roboto-Bold.ttf", 130)
-tag_f = ImageFont.truetype(f"{FONTS}/Roboto-Light.ttf", 44)
+heading_f = ImageFont.truetype(f"{FONTS}/PlusJakartaSans-ExtraBold.ttf", 78)
+eyebrow_f = ImageFont.truetype(f"{FONTS}/PlusJakartaSans-SemiBold.ttf", 30)
+bullet_f = ImageFont.truetype(f"{FONTS}/PlusJakartaSans-Regular.ttf", 36)
+small_f = ImageFont.truetype(f"{FONTS}/PlusJakartaSans-Medium.ttf", 26)
+brand_f = ImageFont.truetype(f"{FONTS}/PlusJakartaSans-ExtraBold.ttf", 130)
+tag_f = ImageFont.truetype(f"{FONTS}/PlusJakartaSans-Regular.ttf", 44)
 
 
 def rounded(img: Image.Image, radius: int) -> Image.Image:
@@ -57,8 +58,8 @@ def phone_card(path: str, height: int, crop=None) -> Image.Image:
 def base_canvas() -> Image.Image:
     c = Image.new("RGBA", (1920, 1080), CREAM + (255,))
     d = ImageDraw.Draw(c)
-    d.ellipse([1500, -350, 2350, 500], fill=(247, 228, 219, 255))
-    d.ellipse([-260, 760, 420, 1440], fill=(250, 236, 228, 255))
+    d.ellipse([1500, -350, 2350, 500], fill=(238, 229, 216, 255))
+    d.ellipse([-260, 760, 420, 1440], fill=(240, 232, 221, 255))
     d.text((110, 1006), "mangwalo.vercel.app", font=small_f, fill=TERRA)
     return c
 

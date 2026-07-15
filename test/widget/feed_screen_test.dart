@@ -47,11 +47,13 @@ void main() {
     await tester.pumpWidget(app(listings, await settingsRepo()));
     await tester.pumpAndSettle();
 
-    // Overdue item sorts to the very top with its badge.
+    // Overdue item sorts to the very top with its due-value column
+    // (icon + "5d overdue" — full wording lives in the semantics label).
     expect(find.text('Steel pressure cooker (5L)'), findsOneWidget);
-    expect(find.text('Overdue by 5 days'), findsOneWidget);
-    expect(find.text('Due in 2 days'), findsOneWidget);
-    expect(find.text('Bandra West noticeboard'), findsOneWidget);
+    expect(find.text('5d'), findsOneWidget);
+    expect(find.text('overdue'), findsOneWidget);
+    expect(find.text('2d'), findsOneWidget);
+    expect(find.textContaining('Bandra West'), findsOneWidget);
   });
 
   testWidgets('each listing card is one merged semantics node',
