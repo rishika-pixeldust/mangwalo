@@ -38,7 +38,10 @@ class NightNavBar extends StatelessWidget {
 
     Widget item(int index, NightNavDestination d) {
       final selected = index == selectedIndex;
-      return Expanded(
+      // 80px: two items + the 76px center gap fit a 430px phone width
+      // with even spacing (a 92px pair overflowed the half by 19px).
+      return SizedBox(
+        width: 80,
         child: Semantics(
           label: d.label,
           button: true,
@@ -101,13 +104,33 @@ class NightNavBar extends StatelessWidget {
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          // Two equal halves around a fixed center gap, so the gap — and
+          // the FAB docked at screen center — land exactly in the middle,
+          // with destinations balanced evenly on each side.
           child: Row(
             children: [
-              for (var i = 0; i < left.length; i++) item(i, left[i]),
-              // Gap under the docked center action.
-              const SizedBox(width: 84),
-              for (var i = 0; i < right.length; i++)
-                item(left.length + i, right[i]),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    for (var i = 0; i < left.length; i++) item(i, left[i]),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 76),
+              Expanded(
+                child: Row(
+                  // Packed toward the center gap so a lone destination
+                  // mirrors the left pair's distance from the FAB instead
+                  // of drifting to the far edge.
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(width: 5),
+                    for (var i = 0; i < right.length; i++)
+                      item(left.length + i, right[i]),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
