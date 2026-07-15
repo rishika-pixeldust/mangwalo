@@ -101,9 +101,9 @@ class NightNavBar extends StatelessWidget {
         top: false,
         child: Padding(
           // Tall top padding reserves room for the lower half of the
-          // half-docked center action, keeping the middle destination's
-          // icon clear of it.
-          padding: const EdgeInsets.fromLTRB(12, 26, 12, 10),
+          // half-docked center action plus clear air between it and the
+          // middle destination's icon.
+          padding: const EdgeInsets.fromLTRB(12, 38, 12, 10),
           child: Row(
             children: [
               for (var i = 0; i < destinations.length; i++)
@@ -116,26 +116,10 @@ class NightNavBar extends StatelessWidget {
   }
 }
 
-/// Centers the FAB horizontally and floats it ABOVE the nav bar so only its
-/// lower edge overlaps the slab — the destination beneath stays visible.
-class RaisedCenterDockedFabLocation extends FloatingActionButtonLocation {
-  const RaisedCenterDockedFabLocation({this.lift = 20});
-
-  /// How far above the centerDocked position (FAB center on the bar's top
-  /// edge) the button rises.
-  final double lift;
-
-  @override
-  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    final base =
-        FloatingActionButtonLocation.centerDocked.getOffset(scaffoldGeometry);
-    return Offset(base.dx, base.dy - lift);
-  }
-}
-
-/// The orange rounded-square primary action, floating over the nav bar's top
-/// edge. Use as Scaffold.floatingActionButton with
-/// [RaisedCenterDockedFabLocation].
+/// The orange rounded-square primary action, half-docked over the nav bar's
+/// top edge. Use as Scaffold.floatingActionButton with
+/// FloatingActionButtonLocation.centerDocked; the bar's tall top padding
+/// keeps the center destination clear beneath it.
 class NightCenterAction extends StatelessWidget {
   const NightCenterAction({
     super.key,

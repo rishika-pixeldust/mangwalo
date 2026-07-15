@@ -16,7 +16,7 @@ your device.
 - **Onboarding** — pick your neighborhood once (single-neighborhood scope); a
   clearly-marked sample noticeboard loads automatically so the first feed is never
   empty (removable in Settings).
-- **Feed** — browse offers and requests with category emoji and optional item photos;
+- **Feed** — browse offers and requests with category icons and optional item photos;
   filter by type and category; search titles, descriptions, and landmarks; overdue
   loans float to the top.
 - **My items view** — a Noticeboard / My-items split with a lending summary strip
@@ -45,7 +45,7 @@ your device.
 | State | Riverpod 3 |
 | Persistence | Hive CE (IndexedDB on web) behind a `ListingRepository` interface |
 | Local AI | Deterministic rule engine behind a `LocalAiService` interface — no model, no network, no hosted APIs |
-| Design | Material 3, warm terracotta theme, light + dark |
+| Design | Material 3, "Warm Ledger" design system (cream + peach-orange + charcoal, Plus Jakarta Sans), light + dark — see [design-system.md](docs/design-system.md) |
 
 ## Getting started
 
@@ -58,7 +58,7 @@ flutter pub get
 # Run in debug (fixed port keeps IndexedDB data stable across relaunches)
 flutter run -d chrome --web-port=8080
 
-# Tests (59 tests: AI engine, validators, due-date math, codec, Hive repo, widgets)
+# Tests (66 tests: AI engine, validators, due-date math, codec, Hive repo, widgets)
 flutter test
 
 # Static analysis
@@ -101,7 +101,8 @@ Riverpod providers (feed filter, suggestions, settings)
 | [Local AI note](docs/local-ai-note.md) | Helper type, boundary, fallback, honest limitations |
 | [ADR-0001](docs/adr/0001-local-first-marketplace-slice.md) | Local-first architecture decision record |
 | [Demo script](docs/demo-script.md) | Timed 3-minute demo walkthrough |
-| [Demo video](docs/media/mangwalo-demo.mp4) | 2:17 narrated walkthrough — what MangWalo is + the four Lab 1 pillars |
+| [Demo video](docs/media/mangwalo-demo.mp4) | 2:19 narrated walkthrough — what MangWalo is + the four Lab 1 pillars |
+| [Technical overview](docs/technical-overview.md) | Architecture, AI engine, security model, testing — for engineers ([PDF](docs/technical-overview.pdf)) |
 
 ## Non-goals & honesty notes
 
