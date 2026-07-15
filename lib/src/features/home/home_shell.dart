@@ -33,6 +33,15 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         2 => const SettingsScreen(),
         _ => const FeedScreen(),
       },
+      floatingActionButton: NightCenterAction(
+        icon: Icons.add,
+        label: 'New listing',
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ListingFormScreen()),
+        ),
+      ),
+      // Docks the orange square half-over the nav bar's top edge.
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: NightNavBar(
         destinations: const [
           NightNavDestination(
@@ -53,11 +62,6 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         ],
         selectedIndex: _index,
         onDestinationSelected: _select,
-        centerIcon: Icons.add,
-        centerLabel: 'New listing',
-        onCenterPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const ListingFormScreen()),
-        ),
       ),
     );
   }

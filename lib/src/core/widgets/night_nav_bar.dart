@@ -15,25 +15,21 @@ class NightNavDestination {
 }
 
 /// The dark docked bottom bar of the Warm Ledger design system: charcoal
-/// slab with 28px top radii, icon destinations, and an orange rounded-square
-/// center button for the primary action.
+/// slab with 28px top radii and icon destinations. The primary action is a
+/// separate floating square (see [NightCenterAction]) docked over the bar's
+/// top edge via Scaffold's centerDocked FAB location — the bar just leaves
+/// a center gap for it.
 class NightNavBar extends StatelessWidget {
   const NightNavBar({
     super.key,
     required this.destinations,
     required this.selectedIndex,
     required this.onDestinationSelected,
-    required this.centerIcon,
-    required this.centerLabel,
-    required this.onCenterPressed,
   });
 
   final List<NightNavDestination> destinations;
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
-  final IconData centerIcon;
-  final String centerLabel;
-  final VoidCallback onCenterPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -108,41 +104,55 @@ class NightNavBar extends StatelessWidget {
           child: Row(
             children: [
               for (var i = 0; i < left.length; i++) item(i, left[i]),
-              // Center action: orange rounded-square, the bar's one accent.
-              // Height MUST be bounded: Scaffold hands the nav bar loose
-              // constraints, and an unbounded Center would expand the whole
-              // bar to fill the screen.
-              Expanded(
-                child: SizedBox(
-                  height: 64,
-                  child: Center(
-                  child: Semantics(
-                    label: centerLabel,
-                    button: true,
-                    onTap: onCenterPressed,
-                    child: ExcludeSemantics(
-                      child: Material(
-                        color: scheme.primary,
-                        borderRadius: BorderRadius.circular(20),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(20),
-                          onTap: onCenterPressed,
-                          child: SizedBox(
-                            width: 58,
-                            height: 58,
-                            child: Icon(centerIcon,
-                                size: 28, color: scheme.onPrimary),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  ),
-                ),
-              ),
+              // Gap under the docked center action.
+              const SizedBox(width: 84),
               for (var i = 0; i < right.length; i++)
                 item(left.length + i, right[i]),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The orange rounded-square primary action, docked over the nav bar's top
+/// edge. Use as Scaffold.floatingActionButton with
+/// FloatingActionButtonLocation.centerDocked.
+class NightCenterAction extends StatelessWidget {
+  const NightCenterAction({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      label: label,
+      button: true,
+      onTap: onPressed,
+      child: ExcludeSemantics(
+        child: Material(
+          color: scheme.primary,
+          borderRadius: BorderRadius.circular(22),
+          // Slight lift so the square reads above list content it overlaps.
+          elevation: 3,
+          shadowColor: scheme.shadow.withValues(alpha: 0.35),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(22),
+            onTap: onPressed,
+            child: SizedBox(
+              width: 64,
+              height: 64,
+              child: Icon(icon, size: 30, color: scheme.onPrimary),
+            ),
           ),
         ),
       ),
