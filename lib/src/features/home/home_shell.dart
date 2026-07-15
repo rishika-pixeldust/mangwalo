@@ -40,8 +40,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           MaterialPageRoute(builder: (_) => const ListingFormScreen()),
         ),
       ),
-      // Docks the orange square half-over the nav bar's top edge.
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      // Floats the orange square above the bar, over the center destination.
+      floatingActionButtonLocation: const RaisedCenterDockedFabLocation(),
       bottomNavigationBar: NightNavBar(
         destinations: const [
           NightNavDestination(

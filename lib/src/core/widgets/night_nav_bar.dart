@@ -38,10 +38,7 @@ class NightNavBar extends StatelessWidget {
 
     Widget item(int index, NightNavDestination d) {
       final selected = index == selectedIndex;
-      // 80px: two items + the 76px center gap fit a 430px phone width
-      // with even spacing (a 92px pair overflowed the half by 19px).
-      return SizedBox(
-        width: 80,
+      return Expanded(
         child: Semantics(
           label: d.label,
           button: true,
@@ -92,9 +89,9 @@ class NightNavBar extends StatelessWidget {
       );
     }
 
-    final left = destinations.sublist(0, (destinations.length / 2).ceil());
-    final right = destinations.sublist((destinations.length / 2).ceil());
-
+    // Destinations spread evenly — the middle one sits at screen center,
+    // directly beneath the floating + action (see NightCenterAction, raised
+    // above the bar's top edge by RaisedCenterDockedFabLocation).
     return Container(
       decoration: BoxDecoration(
         color: night.night,
@@ -104,33 +101,10 @@ class NightNavBar extends StatelessWidget {
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          // Two equal halves around a fixed center gap, so the gap — and
-          // the FAB docked at screen center — land exactly in the middle,
-          // with destinations balanced evenly on each side.
           child: Row(
             children: [
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    for (var i = 0; i < left.length; i++) item(i, left[i]),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 76),
-              Expanded(
-                child: Row(
-                  // Packed toward the center gap so a lone destination
-                  // mirrors the left pair's distance from the FAB instead
-                  // of drifting to the far edge.
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const SizedBox(width: 5),
-                    for (var i = 0; i < right.length; i++)
-                      item(left.length + i, right[i]),
-                  ],
-                ),
-              ),
+              for (var i = 0; i < destinations.length; i++)
+                item(i, destinations[i]),
             ],
           ),
         ),
@@ -139,9 +113,26 @@ class NightNavBar extends StatelessWidget {
   }
 }
 
-/// The orange rounded-square primary action, docked over the nav bar's top
+/// Centers the FAB horizontally and floats it ABOVE the nav bar so only its
+/// lower edge overlaps the slab — the destination beneath stays visible.
+class RaisedCenterDockedFabLocation extends FloatingActionButtonLocation {
+  const RaisedCenterDockedFabLocation({this.lift = 20});
+
+  /// How far above the centerDocked position (FAB center on the bar's top
+  /// edge) the button rises.
+  final double lift;
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
+    final base =
+        FloatingActionButtonLocation.centerDocked.getOffset(scaffoldGeometry);
+    return Offset(base.dx, base.dy - lift);
+  }
+}
+
+/// The orange rounded-square primary action, floating over the nav bar's top
 /// edge. Use as Scaffold.floatingActionButton with
-/// FloatingActionButtonLocation.centerDocked.
+/// [RaisedCenterDockedFabLocation].
 class NightCenterAction extends StatelessWidget {
   const NightCenterAction({
     super.key,
