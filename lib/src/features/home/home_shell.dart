@@ -40,8 +40,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           MaterialPageRoute(builder: (_) => const ListingFormScreen()),
         ),
       ),
-      // Floats the orange square above the bar, over the center destination.
-      floatingActionButtonLocation: const RaisedCenterDockedFabLocation(),
+      // Half in the bar, half floating: FAB center rides the slab's top edge.
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: NightNavBar(
         destinations: const [
           NightNavDestination(

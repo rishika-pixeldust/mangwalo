@@ -100,7 +100,10 @@ class NightNavBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          // Tall top padding reserves room for the lower half of the
+          // half-docked center action, keeping the middle destination's
+          // icon clear of it.
+          padding: const EdgeInsets.fromLTRB(12, 26, 12, 10),
           child: Row(
             children: [
               for (var i = 0; i < destinations.length; i++)
