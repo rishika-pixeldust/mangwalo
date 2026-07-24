@@ -53,6 +53,29 @@ void main() {
     });
   });
 
+  group('Validators.pricePerDay / deposit', () {
+    test('price is required and numeric', () {
+      expect(Validators.pricePerDay(''), isNotNull);
+      expect(Validators.pricePerDay('abc'), isNotNull);
+      expect(Validators.pricePerDay('2500'), isNull);
+      expect(Validators.pricePerDay('2,500'), isNull); // commas tolerated
+    });
+
+    test('price bounds enforced', () {
+      expect(Validators.pricePerDay('10'), isNotNull); // below ₹50 floor
+      expect(Validators.pricePerDay('999999'), isNotNull); // above cap
+      expect(Validators.pricePerDay('100000'), isNull);
+    });
+
+    test('deposit is optional but bounded when present', () {
+      expect(Validators.deposit(''), isNull);
+      expect(Validators.deposit(null), isNull);
+      expect(Validators.deposit('15000'), isNull);
+      expect(Validators.deposit('abc'), isNotNull);
+      expect(Validators.deposit('999999'), isNotNull);
+    });
+  });
+
   group('Validators.returnDate', () {
     final now = DateTime(2026, 7, 13, 15, 30);
 

@@ -1,7 +1,7 @@
 /// App-wide constants. No secrets live here — or anywhere in this repo.
 abstract final class AppConstants {
   static const appName = 'MangWalo';
-  static const tagline = 'Maang lo — your neighborhood lends a hand.';
+  static const tagline = 'Maang lo — luxury from your locality.';
 
   /// Single-neighborhood scope: the user picks one at first launch.
   static const neighborhoods = <String>[
@@ -20,5 +20,7 @@ abstract final class AppConstants {
   static const settingsKey = 'appSettings';
 
   /// Version stamped into every persisted listing for tolerant migration.
-  static const schemaVersion = 1;
+  // v2: the luxury-rental pivot — pricing, deposits, multi-photo galleries,
+  // reviews, and the new catalog categories.
+  static const schemaVersion = 2;
 }

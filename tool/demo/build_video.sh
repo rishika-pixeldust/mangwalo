@@ -13,17 +13,17 @@ narrate() { # $1 index, $2 text
   say -v "$VOICE" -r "$RATE" -o "audio/s$1.aiff" "$2"
 }
 
-narrate 0 "Meet MangWalo. Maang lo — just ask! A local-first noticeboard where neighbors in one Mumbai locality borrow and lend everyday things — a drill, a pressure cooker, a badminton racket. Built in Flutter for M A L Lab One, and live at mangwalo dot vercel dot app. There is no account and no server. Everything you see stays on your device."
+narrate 0 "Meet MangWalo. Maang lo — just ask! A local-first noticeboard where neighbors in one Mumbai locality rent luxury from each other — a Chanel flap bag, a Sabyasachi lehenga, a full cricket kit. Every listing carries a daily rate, a photo gallery, and reviews. Built in Flutter for M A L Lab One, and live at mangwalo dot vercel dot app. No account, no server — everything stays on your device."
 
-narrate 1 "First, product thinking. The slice is deliberately sharp. One neighborhood. One noticeboard. Offers, and requests. A My Items view shows your lending life at a glance, and the personal feature — return date tracking — means every lent item remembers who borrowed it, and when it is due. Overdue loans flag themselves, and jump to the top of the feed."
+narrate 1 "First, product thinking. The niche is deliberately sharp: designer bags, event and party wear, jewellery, watches, and sports kits — priced per day, right on the card, and only from your locality. Renters leave star reviews that speak to the item and the person. And the personal feature — return date tracking — means every rented piece remembers who has it, and when it is due. Overdue rentals flag themselves, and jump to the top of the board."
 
 narrate 2 "Second, accessibility. Every listing card is one single, meaningful screen reader announcement — not five fragments. Errors pair icons with text, never color alone. Every touch target is at least forty eight pixels. And the layout survives two hundred percent text scaling — what you see here is the feed at nearly double size, with nothing broken."
 
-narrate 3 "Third, local A I. Type — bosch ka drill machine, thoda purana but works fine — and the on-device helper suggests a title, a category, condition tags, and a fair lending duration. It is a deterministic rules engine that understands Hinglish, needs no cloud and no A P I keys, and works fully offline. It sits behind a swappable Local A I Service boundary, ready for a real on-device model without touching a single call site."
+narrate 3 "Third, local A I. Type — sabyasachi lehenga, worn once and dry cleaned — and the on-device helper suggests a title, a category, condition tags, a rental window, and a rate: six thousand rupees a day, because it knows Sabyasachi is a premium label and doubles the base. It is a deterministic rules engine that understands Hinglish, needs no cloud and no A P I keys, and works fully offline — behind a swappable Local A I Service boundary, ready for a real on-device model."
 
-narrate 4 "Fourth, security. MangWalo practices data minimization. Type a phone number, or a flat number, and it warns you instantly — showing the exact text it found. The landmark field hard-rejects addresses. Photos are re-encoded on the device, stripping location metadata. And one tap in settings resets every byte of local data."
+narrate 4 "Fourth, security. MangWalo practices data minimization. Type a phone number, or a flat number, and it warns you instantly — showing the exact text it found. The landmark field hard-rejects addresses. Every gallery photo is re-encoded on the device, stripping location metadata before it is stored. Renter names are first names only. And one tap in settings resets every byte of local data."
 
-narrate 5 "That is MangWalo. Product thinking. Accessibility. Local A I. And security. One working, tested, deployed slice. Try it at mangwalo dot vercel dot app. Maang lo — your neighborhood lends a hand!"
+narrate 5 "That is MangWalo. Product thinking. Accessibility. Local A I. And security. One working, tested, deployed slice. Try it at mangwalo dot vercel dot app. Maang lo — luxury, from your locality!"
 
 SLIDES=(s0_intro s1_product s2_a11y s3_ai s4_security s5_outro)
 > segments/list.txt

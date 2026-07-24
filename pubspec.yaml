@@ -41,6 +41,7 @@ dependencies:
   intl: ^0.20.3
   image_picker: ^1.2.3
   image: ^4.9.1
+  crypto: ^3.0.7
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +65,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  assets:
+    # Illustrative sample-listing imagery (generated, no real products).
+    - assets/seed/
+
   # Bundled offline (local-first: no runtime font fetching). OFL license
   # alongside the files in assets/fonts/.
   fonts:
@@ -79,6 +84,14 @@ flutter:
           weight: 700
         - asset: assets/fonts/PlusJakartaSans-ExtraBold.ttf
           weight: 800
+    - family: PlayfairDisplay
+      fonts:
+        - asset: assets/fonts/PlayfairDisplay-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/PlayfairDisplay-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/PlayfairDisplay-Bold.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:

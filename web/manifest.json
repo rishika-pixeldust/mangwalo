@@ -1,11 +1,11 @@
 {
-    "name": "MangWalo — neighborhood borrow & lend",
+    "name": "MangWalo — rent luxury nearby",
     "short_name": "MangWalo",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#F3EEE6",
-    "theme_color": "#F2793C",
-    "description": "Maang lo — a local-first noticeboard to borrow and lend everyday things within your Mumbai neighborhood. No account, no server: everything stays on your device.",
+    "background_color": "#F6EFEA",
+    "theme_color": "#7E2231",
+    "description": "Maang lo — rent designer bags, event wear and sports kits from neighbors in your Mumbai locality. No account, no server: everything stays on your device.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

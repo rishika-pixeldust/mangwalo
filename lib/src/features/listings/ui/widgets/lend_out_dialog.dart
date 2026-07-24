@@ -3,9 +3,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/validation/sanitizer.dart';
 
-/// Lend-out details: who is borrowing (first name only — data minimization)
-/// and the expected return date, pre-filled with the AI-suggested lending
-/// duration when one was accepted.
+/// Rental details: who is renting (first name only — data minimization)
+/// and the expected return date, pre-filled with the AI-suggested rental
+/// window when one was accepted.
 Future<({DateTime dueDate, String borrowerName})?> showLendOutDialog(
   BuildContext context, {
   required DateTime now,
@@ -64,7 +64,7 @@ class _LendOutDialogState extends State<_LendOutDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AlertDialog(
-      title: const Text('Mark as lent out'),
+      title: const Text('Mark as rented out'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,7 +74,7 @@ class _LendOutDialogState extends State<_LendOutDialog> {
             maxLength: 30,
             textCapitalization: TextCapitalization.words,
             decoration: const InputDecoration(
-              labelText: 'Borrower (optional)',
+              labelText: 'Renter (optional)',
               hintText: 'First name is enough',
               helperText: 'Stored only on this device.',
             ),
@@ -102,7 +102,7 @@ class _LendOutDialogState extends State<_LendOutDialog> {
             dueDate: _dueDate,
             borrowerName: sanitize(_nameController.text, maxLength: 30),
           )),
-          child: const Text('Mark lent out'),
+          child: const Text('Mark rented out'),
         ),
       ],
     );

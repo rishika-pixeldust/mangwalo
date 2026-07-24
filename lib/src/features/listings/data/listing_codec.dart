@@ -17,6 +17,8 @@ abstract final class ListingCodec {
         'neighborhood': l.neighborhood,
         'contactChannel': l.contactChannel.name,
         'contactNote': l.contactNote,
+        'pricePerDayInr': l.pricePerDayInr,
+        'depositInr': l.depositInr,
         'status': l.status.name,
         'lendingState': l.lendingState.name,
         // Date-only, so timezone round-trips can never shift the day.
@@ -24,7 +26,16 @@ abstract final class ListingCodec {
         'returnedAt': l.returnedAt?.toUtc().toIso8601String(),
         'borrowerName': l.borrowerName,
         'suggestedDurationDays': l.suggestedDurationDays,
-        'photoBase64': l.photoBase64,
+        'photos': l.photos,
+        'reviews': [
+          for (final r in l.reviews)
+            {
+              'rating': r.rating,
+              'text': r.text,
+              'reviewerName': r.reviewerName,
+              'createdAt': r.createdAt.toUtc().toIso8601String(),
+            }
+        ],
         'createdAt': l.createdAt.toUtc().toIso8601String(),
         'updatedAt': l.updatedAt.toUtc().toIso8601String(),
         'isMine': l.isMine,
@@ -59,8 +70,10 @@ abstract final class ListingCodec {
             ListingType.values, map['type'] as String?, ListingType.offer),
         title: title,
         description: map['description'] as String? ?? '',
+        // Unknown/legacy categories (v1 rows) land in Accessories rather
+        // than being dropped.
         category: _enumByName(
-            Category.values, map['category'] as String?, Category.other),
+            Category.values, map['category'] as String?, Category.accessories),
         conditionTags: (map['conditionTags'] as List<dynamic>?)
                 ?.whereType<String>()
                 .toList() ??
@@ -70,6 +83,8 @@ abstract final class ListingCodec {
         contactChannel: _enumByName(ContactChannel.values,
             map['contactChannel'] as String?, ContactChannel.societyBoard),
         contactNote: map['contactNote'] as String? ?? '',
+        pricePerDayInr: (map['pricePerDayInr'] as num?)?.toInt() ?? 0,
+        depositInr: (map['depositInr'] as num?)?.toInt(),
         status: _enumByName(InteractionStatus.values, map['status'] as String?,
             InteractionStatus.saved),
         lendingState: lendingState,
@@ -77,7 +92,8 @@ abstract final class ListingCodec {
         returnedAt: _parseTimestamp(map['returnedAt'] as String?),
         borrowerName: map['borrowerName'] as String? ?? '',
         suggestedDurationDays: (map['suggestedDurationDays'] as num?)?.toInt(),
-        photoBase64: map['photoBase64'] as String?,
+        photos: _decodePhotos(map),
+        reviews: _decodeReviews(map['reviews']),
         createdAt: createdAt,
         updatedAt: _parseTimestamp(map['updatedAt'] as String?) ?? createdAt,
         isMine: map['isMine'] as bool? ?? false,
@@ -86,6 +102,37 @@ abstract final class ListingCodec {
     } catch (_) {
       return null;
     }
+  }
+
+  /// v2 stores a `photos` list; v1 rows carried a single `photoBase64`,
+  /// migrated here into a one-element gallery.
+  static List<String> _decodePhotos(Map<String, dynamic> map) {
+    final list =
+        (map['photos'] as List<dynamic>?)?.whereType<String>().toList();
+    if (list != null && list.isNotEmpty) {
+      return list.take(kMaxListingPhotos).toList();
+    }
+    final legacy = map['photoBase64'] as String?;
+    return legacy == null || legacy.isEmpty ? const [] : [legacy];
+  }
+
+  static List<Review> _decodeReviews(Object? raw) {
+    if (raw is! List) return const [];
+    final out = <Review>[];
+    for (final entry in raw) {
+      if (entry is! Map) continue;
+      final rating = (entry['rating'] as num?)?.toInt();
+      final text = entry['text'] as String?;
+      if (rating == null || rating < 1 || rating > 5 || text == null) continue;
+      out.add(Review(
+        rating: rating,
+        text: text,
+        reviewerName: entry['reviewerName'] as String? ?? '',
+        createdAt:
+            _parseTimestamp(entry['createdAt'] as String?) ?? DateTime.now(),
+      ));
+    }
+    return out;
   }
 
   static String _dateOnly(DateTime d) =>

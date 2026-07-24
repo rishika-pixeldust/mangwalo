@@ -6,6 +6,7 @@
 // Renders real app screens at 3x phone resolution with real fonts and
 // writes them to tool/demo/goldens/*.png for the demo video + preview
 // gallery pipeline.
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ import 'package:mangwalo/src/features/listings/domain/listing.dart';
 import 'package:mangwalo/src/features/listings/ui/feed_screen.dart';
 import 'package:mangwalo/src/features/listings/ui/listing_detail_screen.dart';
 import 'package:mangwalo/src/features/listings/ui/listing_form_screen.dart';
+import 'package:mangwalo/src/features/onboarding/intro_screen.dart';
 import 'package:mangwalo/src/features/onboarding/onboarding_screen.dart';
 import 'package:mangwalo/src/features/settings/application/settings_controller.dart';
 import 'package:mangwalo/src/features/settings/data/hive_settings_repository.dart';
@@ -52,20 +54,42 @@ Future<void> _loadFonts() async {
 
 final _now = DateTime(2026, 7, 13, 10, 0);
 
-Listing _mine() => Listing(
+Future<String?> _filePhotoLoader(String assetPath) async {
+  try {
+    final bytes =
+        await File('/Users/rishika/StudioProjects/mal/$assetPath').readAsBytes();
+    return base64Encode(bytes);
+  } catch (_) {
+    return null;
+  }
+}
+
+Future<Listing> _mine() async => Listing(
       id: 'mine-1',
       type: ListingType.offer,
-      title: 'Yonex Badminton Racket',
+      title: 'Gucci Marmont shoulder bag',
       description:
-          'yonex badminton racket, barely used, happy to lend on weekends',
-      category: Category.sportsFitness,
+          'gucci marmont shoulder bag, barely used, with dust bag. '
+          'weekends only.',
+      category: Category.designerBags,
       conditionTags: const ['Gently used'],
       area: 'Near Bandra Talao',
       neighborhood: 'Bandra West',
+      pricePerDayInr: 5000,
+      depositInr: 20000,
       lendingState: LendingState.lentOut,
       dueDate: DateTime(2026, 7, 18),
       borrowerName: 'Priya',
       suggestedDurationDays: 7,
+      photos: [(await _filePhotoLoader('assets/seed/bag_lv.jpg')) ?? ''],
+      reviews: [
+        Review(
+          rating: 5,
+          text: 'Gorgeous bag, pickup was effortless.',
+          reviewerName: 'Meher',
+          createdAt: DateTime(2026, 7, 2),
+        ),
+      ],
       createdAt: _now,
       updatedAt: _now,
       isMine: true,
@@ -78,8 +102,11 @@ Widget _app(
   ThemeMode mode = ThemeMode.light,
 }) {
   final settingsRepo = InMemorySettingsRepository();
-  settingsRepo.save(
-      const AppSettings(neighborhood: 'Bandra West', seedVersion: 1));
+  settingsRepo.save(const AppSettings(
+      neighborhood: 'Bandra West',
+      displayName: 'Rishika',
+      introSeen: true,
+      seedVersion: 1));
   return ProviderScope(
     overrides: [
       listingRepositoryProvider.overrideWithValue(repo),
@@ -101,10 +128,13 @@ Widget _app(
   );
 }
 
-InMemoryListingRepository _board({bool withMine = true}) =>
+Future<InMemoryListingRepository> _board({bool withMine = true}) async =>
     InMemoryListingRepository([
-      ...buildSampleListings(neighborhood: 'Bandra West', now: _now),
-      if (withMine) _mine(),
+      ...await buildSampleListings(
+          neighborhood: 'Bandra West',
+          now: _now,
+          photoLoader: _filePhotoLoader),
+      if (withMine) await _mine(),
     ]);
 
 void main() {
@@ -125,23 +155,30 @@ void main() {
   Future<void> shoot(WidgetTester tester, String name) => expectLater(
       find.byType(MaterialApp), matchesGoldenFile('goldens/$name.png'));
 
+  testWidgets('00 intro', (tester) async {
+    frame(tester);
+    await tester.pumpWidget(_app(const IntroScreen(), repo: await _board()));
+    await settle(tester);
+    await shoot(tester, '00_intro');
+  });
+
   testWidgets('01 onboarding', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const OnboardingScreen(), repo: _board()));
+    await tester.pumpWidget(_app(const OnboardingScreen(), repo: await _board()));
     await settle(tester);
     await shoot(tester, '01_onboarding');
   });
 
   testWidgets('02 board feed', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const HomeShell(), repo: _board()));
+    await tester.pumpWidget(_app(const HomeShell(), repo: await _board()));
     await settle(tester);
     await shoot(tester, '02_feed');
   });
 
   testWidgets('03 my items + hero', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const HomeShell(), repo: _board()));
+    await tester.pumpWidget(_app(const HomeShell(), repo: await _board()));
     await settle(tester);
     await tester.tap(find.text('My items'));
     await settle(tester);
@@ -150,10 +187,10 @@ void main() {
 
   testWidgets('04 AI suggestions', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const ListingFormScreen(), repo: _board()));
+    await tester.pumpWidget(_app(const ListingFormScreen(), repo: await _board()));
     await settle(tester);
     await tester.enterText(find.byType(TextFormField).first,
-        'bosch ka drill machine, thoda purana but works fine, weekends only');
+        'chanel ka flap bag hai, barely used, with dust bag. weekends only');
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(milliseconds: 200));
     await shoot(tester, '04_ai_suggestions');
@@ -161,10 +198,10 @@ void main() {
 
   testWidgets('05 privacy warnings', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const ListingFormScreen(), repo: _board()));
+    await tester.pumpWidget(_app(const ListingFormScreen(), repo: await _board()));
     await settle(tester);
     await tester.enterText(find.byType(TextFormField).first,
-        'mixer grinder available, call me on 98200 12345, flat no 402');
+        'kundan necklace set for rent, call me on 98200 12345, flat no 402');
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(milliseconds: 200));
     await shoot(tester, '05_privacy_warning');
@@ -174,7 +211,7 @@ void main() {
     frame(tester);
     await tester.pumpWidget(_app(
         const ListingDetailScreen(listingId: 'mine-1'),
-        repo: _board()));
+        repo: await _board()));
     await settle(tester);
     await shoot(tester, '06_detail_lending');
   });
@@ -182,14 +219,14 @@ void main() {
   testWidgets('07 text scale', (tester) async {
     frame(tester);
     await tester.pumpWidget(
-        _app(const FeedScreen(), repo: _board(), textScale: 1.8));
+        _app(const FeedScreen(), repo: await _board(), textScale: 1.8));
     await settle(tester);
     await shoot(tester, '07_a11y_scale');
   });
 
   testWidgets('08 settings', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const HomeShell(), repo: _board()));
+    await tester.pumpWidget(_app(const HomeShell(), repo: await _board()));
     await settle(tester);
     await tester.tap(find.text('Settings'));
     await settle(tester);
@@ -199,7 +236,7 @@ void main() {
   testWidgets('09 board feed dark', (tester) async {
     frame(tester);
     await tester.pumpWidget(
-        _app(const HomeShell(), repo: _board(), mode: ThemeMode.dark));
+        _app(const HomeShell(), repo: await _board(), mode: ThemeMode.dark));
     await settle(tester);
     await shoot(tester, '09_feed_dark');
   });

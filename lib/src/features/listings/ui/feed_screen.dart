@@ -74,7 +74,7 @@ class FeedScreen extends ConsumerWidget {
                             Flexible(
                               child: Text(
                                 '${settings.neighborhood ?? 'Your neighborhood'}'
-                                ' · maang lo, just ask',
+                                ' · maang lo, luxury nearby',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                     color:
                                         theme.colorScheme.onSurfaceVariant),

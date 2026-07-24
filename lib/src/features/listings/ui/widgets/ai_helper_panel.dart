@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/money.dart';
 import '../../../ai/local_ai_service.dart';
 import '../../domain/listing.dart';
 
@@ -15,10 +16,12 @@ class AiHelperPanel extends StatelessWidget {
     required this.categoryApplied,
     required this.appliedTags,
     required this.durationApplied,
+    required this.priceApplied,
     required this.onApplyTitle,
     required this.onApplyCategory,
     required this.onToggleTag,
     required this.onApplyDuration,
+    required this.onApplyPrice,
   });
 
   final ListingSuggestion suggestion;
@@ -27,10 +30,12 @@ class AiHelperPanel extends StatelessWidget {
   final bool categoryApplied;
   final Set<ConditionTag> appliedTags;
   final bool durationApplied;
+  final bool priceApplied;
   final ValueChanged<String> onApplyTitle;
   final VoidCallback onApplyCategory;
   final ValueChanged<ConditionTag> onToggleTag;
   final VoidCallback onApplyDuration;
+  final ValueChanged<int> onApplyPrice;
 
   @override
   Widget build(BuildContext context) {
@@ -127,10 +132,21 @@ class AiHelperPanel extends StatelessWidget {
                       applied: appliedTags.contains(tag),
                       onTap: () => onToggleTag(tag),
                     ),
+                  if (suggestion.suggestedPricePerDayInr != null)
+                    chip(
+                      text: formatInrPerDay(
+                          suggestion.suggestedPricePerDayInr!),
+                      semanticAction: 'Apply suggested rate: '
+                          '${formatInrPerDay(suggestion.suggestedPricePerDayInr!)}',
+                      applied: priceApplied,
+                      onTap: () =>
+                          onApplyPrice(suggestion.suggestedPricePerDayInr!),
+                    ),
                   if (suggestion.suggestedLoanDuration != null)
                     chip(
-                      text: 'Lend for ${suggestion.suggestedLoanDuration!.label}',
-                      semanticAction: 'Apply suggested lending duration: '
+                      text:
+                          'Rent for ${suggestion.suggestedLoanDuration!.label}',
+                      semanticAction: 'Apply suggested rental window: '
                           '${suggestion.suggestedLoanDuration!.label}',
                       applied: durationApplied,
                       onTap: onApplyDuration,

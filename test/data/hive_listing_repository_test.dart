@@ -10,14 +10,15 @@ void main() {
   late Box<String> box;
   late HiveListingRepository repo;
 
-  Listing make(String id, {String title = 'Ladder'}) => Listing(
+  Listing make(String id, {String title = 'Cricket kit'}) => Listing(
         id: id,
         type: ListingType.offer,
         title: title,
-        description: 'Six-foot aluminium ladder, sturdy.',
-        category: Category.toolsRepair,
+        description: 'Kashmir-willow bat, lightly taped handle.',
+        category: Category.sportsKits,
         area: 'Near the market',
         neighborhood: 'Powai',
+        pricePerDayInr: 900,
         createdAt: DateTime(2026, 7, 1),
         updatedAt: DateTime(2026, 7, 1),
       );

@@ -40,35 +40,32 @@ void main() {
     );
   }
 
-  testWidgets('renders seeded listings with due badges', (tester) async {
-    final listings = InMemoryListingRepository(
-      buildSampleListings(neighborhood: 'Bandra West', now: pinnedNow),
-    );
+  testWidgets('renders seeded listings with prices and due badges',
+      (tester) async {
+    final listings = InMemoryListingRepository(await buildSampleListings(
+        neighborhood: 'Bandra West', now: pinnedNow));
     await tester.pumpWidget(app(listings, await settingsRepo()));
     await tester.pumpAndSettle();
 
-    // Overdue item sorts to the very top with its due-value column
-    // (icon + "5d overdue" — full wording lives in the semantics label).
-    expect(find.text('Steel pressure cooker (5L)'), findsOneWidget);
-    expect(find.text('5d'), findsOneWidget);
-    expect(find.text('overdue'), findsOneWidget);
-    expect(find.text('2d'), findsOneWidget);
+    // Overdue rental sorts to the very top; price pill is bold on the card.
+    expect(find.text('Chanel Classic Flap bag'), findsOneWidget);
+    expect(find.textContaining('₹4,800'), findsWidgets);
+    expect(find.textContaining('Overdue by 5 days'), findsOneWidget);
     expect(find.textContaining('Bandra West'), findsOneWidget);
   });
 
   testWidgets('each listing card is one merged semantics node',
       (tester) async {
     final handle = tester.ensureSemantics();
-    final listings = InMemoryListingRepository(
-      buildSampleListings(neighborhood: 'Bandra West', now: pinnedNow),
-    );
+    final listings = InMemoryListingRepository(await buildSampleListings(
+        neighborhood: 'Bandra West', now: pinnedNow));
     await tester.pumpWidget(app(listings, await settingsRepo()));
     await tester.pumpAndSettle();
 
     expect(
       find.bySemanticsLabel(RegExp(
-          r'Offer: Steel pressure cooker \(5L\).*lent out, borrowed by Sneha, '
-          r'overdue by 5 days')),
+          r'For rent: Chanel Classic Flap bag, ₹4,800/day.*'
+          r'rented out, rented by Kiara, overdue by 5 days')),
       findsOneWidget,
     );
     handle.dispose();
@@ -86,9 +83,8 @@ void main() {
 
   testWidgets('feed survives 200% text scale without overflow',
       (tester) async {
-    final listings = InMemoryListingRepository(
-      buildSampleListings(neighborhood: 'Bandra West', now: pinnedNow),
-    );
+    final listings = InMemoryListingRepository(await buildSampleListings(
+        neighborhood: 'Bandra West', now: pinnedNow));
     await tester.pumpWidget(
         app(listings, await settingsRepo(), textScale: 2.0));
     await tester.pumpAndSettle();

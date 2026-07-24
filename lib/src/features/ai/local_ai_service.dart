@@ -50,6 +50,7 @@ class ListingSuggestion {
     this.suggestedCategory,
     this.conditionTags = const <ConditionTag>[],
     this.suggestedLoanDuration,
+    this.suggestedPricePerDayInr,
     this.confidence = SuggestionConfidence.none,
   });
 
@@ -61,13 +62,18 @@ class ListingSuggestion {
   /// Deduped, in enum declaration order.
   final List<ConditionTag> conditionTags;
   final LoanDuration? suggestedLoanDuration;
+
+  /// Deterministic ₹/day rate suggestion (category base, doubled for a
+  /// recognized premium brand). Always a suggestion — never auto-applied.
+  final int? suggestedPricePerDayInr;
   final SuggestionConfidence confidence;
 
   bool get isEmpty =>
       suggestedTitle == null &&
       suggestedCategory == null &&
       conditionTags.isEmpty &&
-      suggestedLoanDuration == null;
+      suggestedLoanDuration == null &&
+      suggestedPricePerDayInr == null;
 
   @override
   bool operator ==(Object other) =>
@@ -76,11 +82,13 @@ class ListingSuggestion {
       other.suggestedCategory == suggestedCategory &&
       listEquals(other.conditionTags, conditionTags) &&
       other.suggestedLoanDuration == suggestedLoanDuration &&
+      other.suggestedPricePerDayInr == suggestedPricePerDayInr &&
       other.confidence == confidence;
 
   @override
   int get hashCode => Object.hash(suggestedTitle, suggestedCategory,
-      Object.hashAll(conditionTags), suggestedLoanDuration, confidence);
+      Object.hashAll(conditionTags), suggestedLoanDuration,
+      suggestedPricePerDayInr, confidence);
 }
 
 /// Drives the in-app transparency disclosure — swapping the implementation

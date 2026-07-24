@@ -1,4 +1,4 @@
-# MangWalo Design System — "Warm Ledger"
+# MangWalo Design System — "Velvet Ledger"
 
 > **How to use this doc:** paste the whole thing into any Claude (design or code)
 > session **before** asking for new screens, components, or marketing assets.
@@ -10,12 +10,15 @@
 ## 0. Paste-ready design brief (TL;DR for a new session)
 
 ```
-You are designing for MangWalo, a local-first neighborhood borrow-&-lend app.
-Design language: "Warm Ledger" — warm cream canvas, near-white cards with
-28px radii and soft brown-tinted shadows, one vibrant peach-orange accent,
-charcoal ink, and a dark charcoal docked bottom nav with an orange
-rounded-square center action. Typography is Plus Jakarta Sans: ExtraBold for
-big stat numerals, Bold for headings, Medium for labels, Regular for body.
+You are designing for MangWalo, a local-first luxury-rental noticeboard —
+designer bags, event & party wear, jewellery, watches, sports kits — for one
+Mumbai neighborhood at a time.
+Design language: "Velvet Ledger" — warm ivory canvas, near-white cards with
+28px radii and soft wine-tinted shadows, one oxblood/burgundy accent with
+blush containers, wine-black docked bottom nav with a burgundy rounded-square
+center action. Typography pairs Playfair Display (serif display: wordmark,
+page titles, card titles) with Plus Jakarta Sans (everything else); prices
+are ExtraBold sans.
 Generous whitespace, big touch targets (>=48px), icon+text for every state
 (never color alone), light Hinglish personality in microcopy ("Maang lo!").
 No pure black, no pure white, no gradients, no emoji glyphs (use Material
@@ -30,34 +33,34 @@ icons). Every screen must work in light AND dark, at 200% text scale.
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `canvas` | `#F3EEE6` | `#171310` | Scaffold background |
-| `surface` | `#FBF9F4` | `#221D18` | Cards, sheets, inputs |
-| `surfaceAlt` | `#EFE8DD` | `#2B241E` | Pressed/selected fills, meters |
-| `ink` | `#201B16` | `#F4EEE7` | Primary text, icons |
-| `inkSoft` | `#8A8178` | `#A99E93` | Secondary text, captions |
-| `accent` | `#F2793C` | `#F58B55` | THE orange: progress, active nav, highlights, small labels |
-| `accentSoft` | `#FCE4D5` | `#4A2E1E` | Accent containers, chips-selected, badges |
-| `night` | `#211D19` | `#100D0B` | Bottom nav, primary CTA buttons |
-| `onNight` | `#F7F2EB` | `#F7F2EB` | Text/icons on `night` |
-| `warn` | `#8A6D00` on `#F2E3AC` | `#F0D77B` on `#4A3E12` | Privacy warnings (icon + text) |
+| `canvas` | `#F6EFEA` | `#17100D` | Scaffold background |
+| `surface` | `#FDF9F6` | `#221715` | Cards, sheets, inputs |
+| `surfaceAlt` | `#F0E3DD` | `#2E1F1D` | Pressed/selected fills, meters |
+| `ink` | `#2A171C` | `#F4EAE6` | Primary text, icons |
+| `inkSoft` | `#8E7A80` | `#AD9599` | Secondary text, captions |
+| `accent` | `#7E2231` | `#E8A0AB` | THE oxblood/blush: prices, active nav, eyebrows, highlights |
+| `accentSoft` | `#F7DCDE` | `#4A222B` | Accent containers, chips-selected, badges |
+| `night` | `#26141A` | `#100B09` | Bottom nav, primary CTA buttons |
+| `onNight` | `#F7EFEA` | `#F7EFEA` | Text/icons on `night` |
+| `gold` | `#7A5C00` on `#F1E2B0` | `#E9C96B` on `#4A3B0E` | Star ratings, privacy warnings (icon + text) |
 | `danger` | `#B3261E` on `#F9DEDC` | `#F2B8B5` on `#4A1F1C` | Overdue, destructive, errors |
 
 Rules: never pure `#000`/`#FFF`; body text contrast ≥ 4.5:1 in both themes;
-the orange is an **accent**, not a fill for large areas — big surfaces stay cream.
+the oxblood is an **accent**, not a fill for large areas — big surfaces stay ivory.
 
-### 1.2 Typography — Plus Jakarta Sans (bundled, OFL)
+### 1.2 Typography — Playfair Display + Plus Jakarta Sans (bundled, OFL)
 
 | Role | Weight / size / spacing | Example |
 |---|---|---|
-| Stat numeral | ExtraBold 800 · 40–56 | "1250 kcal" → "3 items out" |
-| Display / page title | Bold 700 · 28–32 | "Noticeboard" |
-| Card title | Bold 700 · 18 | "Yonex Badminton Racket" |
-| Section label / eyebrow | SemiBold 600 · 13 · +0.8 tracking, UPPERCASE optional | "TRENDING NEAR YOU" |
+| Stat numeral / price | PJS ExtraBold 800 · 24–40 | "₹4,800" |
+| Display / page title | Playfair Bold 700 · 26–32 | "Noticeboard" |
+| Card title | Playfair SemiBold 600 · 19 | "Chanel Classic Flap bag" |
+| Section label / eyebrow | PJS Bold 700 · 10.5–13 · +1.0 tracking, UPPERCASE | "FOR RENT" |
 | Body | Regular 400 · 15–16 · 1.45 line height | descriptions |
 | Label / chip / nav | Medium 500 · 13–14 | "Tools & Repair" |
 | Caption / meta | Regular 400 · 12–13 in `inkSoft` | "02:30 PM · 35% of goal" |
 
-Numerals in stats always ExtraBold; units ("kcal", "days") drop to Medium at ~55% size.
+Prices always PJS ExtraBold; units ("/day", "per day") drop to Medium at ~55% size. Serif never renders body text.
 
 ### 1.3 Shape
 
@@ -110,11 +113,13 @@ centered Bold 18 title · 44px icon button (bell/settings). Transparent on canva
 `inkSoft` caption; optional segmented arc/meter: 10–12 rounded segments
 (active `accent`, rest `surfaceAlt`), round caps.
 
-**Listing card ("meal card")** — `surface`, radius 28, padding 16. Row: 56px
-rounded thumbnail (photo or category tile) → title Bold 18 + meta caption →
-right column: **bold value** (e.g. "Due in 3d") + small orange caption
-("35% of goal" slot). Chips/badges row above if stateful. Whole card = ONE
-merged semantics node, button, with a composed label.
+**Listing card** — `surface`, radius 28. With photos: full-width 172px cover
+(first photo), `night @ 82%` **₹/day price pill** overlaid bottom-left, photo
+count chip top-right; below: FOR RENT/WANTED eyebrow → Playfair title 19 →
+gold star row ("4.7 · 3 reviews") → category+landmark meta → badge pills.
+Without photos: 56px `accentSoft` category tile left, bold ₹ price column
+right ("₹1,200 / /day budget" on Wanted). Whole card = ONE merged semantics
+node, button, with a composed label incl. price and rating.
 
 **Category tile chip** — white rounded-20 tile, icon + Medium 13 label below/beside;
 selected = `accentSoft` fill + `accent` icon. Horizontal scroll row.
@@ -124,11 +129,22 @@ selected = `accentSoft` fill + `accent` icon. Horizontal scroll row.
 **Primary CTA** — full-width pill, `night` fill, `onNight` Medium 16 text,
 height 56. Secondary: pill outline on surface. Destructive: `danger` text button.
 
-**Segmented meter** ("Easy ●●●○○") — 5 rounded 8×18 pills, active `accent`.
+**Segmented meter** — 10 rounded segments, `danger` → `accent` → `surfaceAlt`.
+
+**Review tile** — `surface` radius 24: gold StarRow → body text → "— Name ·
+date" caption. "Add a review" opens a bottom sheet: 5 tappable stars
+(each a labeled semantics button), text, optional first name.
+
+**Photo gallery (detail)** — 300px PageView, radius 28, dot indicators
+(active dot stretches to 18px); each page announces "Photo N of M".
+
+**Price block (detail)** — `surface` radius 24: ₹ rate ExtraBold 28+ in
+`accent` + "per day", refundable deposit right-aligned.
 
 **Bottom nav** — docked `night` container, top radius 28, 5 slots: 4 icon
 destinations (active = `accent` icon in `accent @ 18%` rounded-square) +
-center **orange rounded-square FAB (radius 20–22)** for the primary action.
+center **burgundy rounded-square FAB (radius 20–22)**, half-docked over the
+bar's top edge, for the primary action.
 Labels optional; if omitted, semantics labels are mandatory.
 
 **Badges** — pill, icon + text: state (`surfaceAlt`/ink), due-soon
@@ -153,6 +169,6 @@ two lines), floating info tags (white pill, tiny shadow), page dots, `night` CTA
 ## 4. Don'ts
 
 - No gradients, no glassmorphism, no pure black/white, no emoji as UI glyphs.
-- Don't fill large areas with the accent orange; don't use more than one accent.
-- No second typeface. No shadow stacking. No color-only affordances.
+- Don't fill large areas with the accent oxblood; gold is only for stars/warnings.
+- No third typeface (serif = display only). No shadow stacking. No color-only affordances.
 - Don't invent new radii/spacing — compose from the tokens above.

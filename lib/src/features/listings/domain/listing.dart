@@ -1,42 +1,36 @@
 import 'package:flutter/foundation.dart';
 
-/// Whether a listing offers an item to lend or requests one to borrow.
+/// Whether a listing offers an item for rent or asks for one.
 enum ListingType { offer, request }
 
 extension ListingTypeLabel on ListingType {
   String get label => switch (this) {
-        ListingType.offer => 'Offer',
-        ListingType.request => 'Request',
+        ListingType.offer => 'For rent',
+        ListingType.request => 'Wanted',
       };
 }
 
+/// The luxury rental catalog: bags, occasion wear, and sports kits — plus
+/// the pieces that complete a look.
 enum Category {
-  toolsRepair,
-  kitchenAppliances,
-  booksStudy,
-  sportsFitness,
-  outdoorsTravel,
-  electronics,
-  musicInstruments,
-  kidsToys,
-  festivalDecor,
-  homeFurniture,
-  other,
+  designerBags,
+  eventWear,
+  partyWear,
+  sportsKits,
+  jewellery,
+  watches,
+  accessories,
 }
 
 extension CategoryLabel on Category {
   String get label => switch (this) {
-        Category.toolsRepair => 'Tools & Repair',
-        Category.kitchenAppliances => 'Kitchen & Appliances',
-        Category.booksStudy => 'Books & Study',
-        Category.sportsFitness => 'Sports & Fitness',
-        Category.outdoorsTravel => 'Outdoors & Travel',
-        Category.electronics => 'Electronics',
-        Category.musicInstruments => 'Music Instruments',
-        Category.kidsToys => 'Kids & Toys',
-        Category.festivalDecor => 'Festival & Decor',
-        Category.homeFurniture => 'Home & Furniture',
-        Category.other => 'Other',
+        Category.designerBags => 'Designer bags',
+        Category.eventWear => 'Event wear',
+        Category.partyWear => 'Party wear',
+        Category.sportsKits => 'Sports kits',
+        Category.jewellery => 'Jewellery',
+        Category.watches => 'Watches',
+        Category.accessories => 'Accessories',
       };
 }
 
@@ -57,7 +51,7 @@ enum LendingState { available, lentOut, returned }
 extension LendingStateLabel on LendingState {
   String get label => switch (this) {
         LendingState.available => 'Available',
-        LendingState.lentOut => 'Lent out',
+        LendingState.lentOut => 'Rented out',
         LendingState.returned => 'Returned',
       };
 }
@@ -73,7 +67,39 @@ extension ContactChannelLabel on ContactChannel {
       };
 }
 
+/// A renter's feedback on a listing: one 5-star rating plus text that can
+/// speak to the item ("pristine, exactly as pictured") and the person
+/// ("returned on time, lovely to deal with"). First names only.
+@immutable
+class Review {
+  const Review({
+    required this.rating,
+    required this.text,
+    required this.reviewerName,
+    required this.createdAt,
+  }) : assert(rating >= 1 && rating <= 5, 'rating must be 1..5');
+
+  final int rating;
+  final String text;
+  final String reviewerName;
+  final DateTime createdAt;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Review &&
+      other.rating == rating &&
+      other.text == text &&
+      other.reviewerName == reviewerName &&
+      other.createdAt == createdAt;
+
+  @override
+  int get hashCode => Object.hash(rating, text, reviewerName, createdAt);
+}
+
 const Object _unset = Object();
+
+/// Maximum photos a listing can carry (cover + gallery).
+const int kMaxListingPhotos = 5;
 
 @immutable
 class Listing {
@@ -88,20 +114,23 @@ class Listing {
     required this.neighborhood,
     this.contactChannel = ContactChannel.societyBoard,
     this.contactNote = '',
+    required this.pricePerDayInr,
+    this.depositInr,
     this.status = InteractionStatus.saved,
     this.lendingState = LendingState.available,
     this.dueDate,
     this.returnedAt,
     this.borrowerName = '',
     this.suggestedDurationDays,
-    this.photoBase64,
+    this.photos = const <String>[],
+    this.reviews = const <Review>[],
     required this.createdAt,
     required this.updatedAt,
     this.isMine = false,
     this.isDemo = false,
   }) : assert(
           (lendingState == LendingState.lentOut) == (dueDate != null),
-          'dueDate must be set if and only if the item is lent out',
+          'dueDate must be set if and only if the item is rented out',
         );
 
   final String id;
@@ -119,6 +148,12 @@ class Listing {
   /// Optional note ("evenings only", "ring flat via intercom"). Stored only
   /// on this device.
   final String contactNote;
+
+  /// Rental rate in whole rupees per day — bold on every card.
+  final int pricePerDayInr;
+
+  /// Optional refundable security deposit in whole rupees.
+  final int? depositInr;
   final InteractionStatus status;
   final LendingState lendingState;
 
@@ -126,13 +161,17 @@ class Listing {
   final DateTime? dueDate;
   final DateTime? returnedAt;
 
-  /// First name of the neighbor who borrowed the item (optional, set when
-  /// marking lent out). First name only — data minimization by design.
+  /// First name of the renter (optional, set when marking rented out).
+  /// First name only — data minimization by design.
   final String borrowerName;
   final int? suggestedDurationDays;
 
-  /// Optional item photo, stored on-device as base64 JPEG (downscaled).
-  final String? photoBase64;
+  /// Item photos, stored on-device as base64 JPEG (downscaled, EXIF
+  /// stripped). First photo is the cover. Max [kMaxListingPhotos].
+  final List<String> photos;
+
+  /// Renter feedback, newest first.
+  final List<Review> reviews;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -142,6 +181,13 @@ class Listing {
 
   /// Sample data flag: shown with a "Sample" badge and removable in one tap.
   final bool isDemo;
+
+  String? get coverPhoto => photos.isEmpty ? null : photos.first;
+
+  /// Average star rating across reviews, or null when unreviewed.
+  double? get averageRating => reviews.isEmpty
+      ? null
+      : reviews.map((r) => r.rating).reduce((a, b) => a + b) / reviews.length;
 
   Listing copyWith({
     ListingType? type,
@@ -153,13 +199,16 @@ class Listing {
     String? neighborhood,
     ContactChannel? contactChannel,
     String? contactNote,
+    int? pricePerDayInr,
+    Object? depositInr = _unset,
     InteractionStatus? status,
     LendingState? lendingState,
     Object? dueDate = _unset,
     Object? returnedAt = _unset,
     String? borrowerName,
     Object? suggestedDurationDays = _unset,
-    Object? photoBase64 = _unset,
+    List<String>? photos,
+    List<Review>? reviews,
     DateTime? updatedAt,
   }) {
     return Listing(
@@ -173,6 +222,9 @@ class Listing {
       neighborhood: neighborhood ?? this.neighborhood,
       contactChannel: contactChannel ?? this.contactChannel,
       contactNote: contactNote ?? this.contactNote,
+      pricePerDayInr: pricePerDayInr ?? this.pricePerDayInr,
+      depositInr:
+          identical(depositInr, _unset) ? this.depositInr : depositInr as int?,
       status: status ?? this.status,
       lendingState: lendingState ?? this.lendingState,
       dueDate: identical(dueDate, _unset) ? this.dueDate : dueDate as DateTime?,
@@ -182,9 +234,8 @@ class Listing {
       suggestedDurationDays: identical(suggestedDurationDays, _unset)
           ? this.suggestedDurationDays
           : suggestedDurationDays as int?,
-      photoBase64: identical(photoBase64, _unset)
-          ? this.photoBase64
-          : photoBase64 as String?,
+      photos: photos ?? this.photos,
+      reviews: reviews ?? this.reviews,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isMine: isMine,
@@ -192,7 +243,7 @@ class Listing {
     );
   }
 
-  /// The only way lending transitions happen — keeps the dueDate invariant.
+  /// The only way rental transitions happen — keeps the dueDate invariant.
   Listing markLentOut(DateTime due, DateTime now, {String borrowerName = ''}) =>
       copyWith(
         lendingState: LendingState.lentOut,
@@ -218,6 +269,11 @@ class Listing {
         updatedAt: now,
       );
 
+  Listing addReview(Review review, DateTime now) => copyWith(
+        reviews: [review, ...reviews],
+        updatedAt: now,
+      );
+
   @override
   bool operator ==(Object other) {
     return other is Listing &&
@@ -231,13 +287,16 @@ class Listing {
         other.neighborhood == neighborhood &&
         other.contactChannel == contactChannel &&
         other.contactNote == contactNote &&
+        other.pricePerDayInr == pricePerDayInr &&
+        other.depositInr == depositInr &&
         other.status == status &&
         other.lendingState == lendingState &&
         other.dueDate == dueDate &&
         other.returnedAt == returnedAt &&
         other.borrowerName == borrowerName &&
         other.suggestedDurationDays == suggestedDurationDays &&
-        other.photoBase64 == photoBase64 &&
+        listEquals(other.photos, photos) &&
+        listEquals(other.reviews, reviews) &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt &&
         other.isMine == isMine &&
@@ -246,5 +305,5 @@ class Listing {
 
   @override
   int get hashCode => Object.hash(id, title, description, category, status,
-      lendingState, dueDate, updatedAt, isDemo);
+      lendingState, dueDate, pricePerDayInr, updatedAt, isDemo);
 }

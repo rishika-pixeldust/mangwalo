@@ -8,18 +8,28 @@ void main() {
     type: ListingType.offer,
     title: 'Cricket bat, size 6',
     description: 'Kashmir-willow bat, lightly taped handle.',
-    category: Category.sportsFitness,
+    category: Category.sportsKits,
     conditionTags: const ['Gently used'],
     area: 'Opposite Jogger\'s Park',
     neighborhood: 'Bandra West',
     contactChannel: ContactChannel.buildingWhatsApp,
     contactNote: 'R. Nair — building group',
+    pricePerDayInr: 900,
+    depositInr: 3000,
     status: InteractionStatus.contacted,
     lendingState: LendingState.lentOut,
     dueDate: DateTime(2026, 7, 15),
     borrowerName: 'Asha',
     suggestedDurationDays: 7,
-    photoBase64: 'aGVsbG8=',
+    photos: const ['aGVsbG8=', 'd29ybGQ='],
+    reviews: [
+      Review(
+        rating: 5,
+        text: 'Kit was complete and the owner was punctual.',
+        reviewerName: 'Rohan',
+        createdAt: DateTime(2026, 7, 5, 9, 0),
+      ),
+    ],
     createdAt: DateTime(2026, 7, 1, 10, 30),
     updatedAt: DateTime(2026, 7, 10, 18, 45),
     isMine: true,
@@ -47,12 +57,15 @@ void main() {
       });
       expect(decoded, isNotNull);
       expect(decoded!.type, ListingType.offer);
-      expect(decoded.category, Category.other);
+      expect(decoded.category, Category.accessories);
       expect(decoded.status, InteractionStatus.saved);
       expect(decoded.lendingState, LendingState.available);
       expect(decoded.conditionTags, isEmpty);
       expect(decoded.borrowerName, isEmpty);
-      expect(decoded.photoBase64, isNull);
+      expect(decoded.photos, isEmpty);
+      expect(decoded.reviews, isEmpty);
+      expect(decoded.pricePerDayInr, 0);
+      expect(decoded.depositInr, isNull);
       expect(decoded.isMine, isFalse);
       expect(decoded.isDemo, isFalse);
     });
@@ -83,6 +96,30 @@ void main() {
       expect(ListingCodec.fromJsonMap({'id': 'no-title'}), isNull);
     });
 
+    test('legacy v1 photoBase64 migrates into a one-element gallery', () {
+      final decoded = ListingCodec.fromJsonMap({
+        'id': 'v1-row',
+        'title': 'Old photo row',
+        'photoBase64': 'aGVsbG8=',
+      });
+      expect(decoded!.photos, ['aGVsbG8=']);
+    });
+
+    test('malformed reviews are skipped, valid ones kept', () {
+      final decoded = ListingCodec.fromJsonMap({
+        'id': 'rev-row',
+        'title': 'Review row',
+        'reviews': [
+          {'rating': 9, 'text': 'impossible rating'},
+          {'text': 'no rating'},
+          {'rating': 4, 'text': 'valid one', 'reviewerName': 'Ira'},
+        ],
+      });
+      expect(decoded!.reviews, hasLength(1));
+      expect(decoded.reviews.single.rating, 4);
+      expect(decoded.reviews.single.reviewerName, 'Ira');
+    });
+
     test('unknown enum names fall back safely', () {
       final decoded = ListingCodec.fromJsonMap({
         'id': 'weird-1',
@@ -92,7 +129,7 @@ void main() {
         'status': 'ghosted',
       });
       expect(decoded!.type, ListingType.offer);
-      expect(decoded.category, Category.other);
+      expect(decoded.category, Category.accessories);
       expect(decoded.status, InteractionStatus.saved);
     });
   });

@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants.dart';
 import 'core/widgets/phone_frame.dart';
 import 'features/home/home_shell.dart';
+import 'features/onboarding/intro_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'features/onboarding/pin_gate_screen.dart';
 import 'features/settings/application/settings_controller.dart';
 import 'theme/app_theme.dart';
 
@@ -24,9 +26,13 @@ class MangWaloApp extends ConsumerWidget {
       // phone-sized on desktop browsers.
       builder: (context, child) =>
           PhoneFrame(child: child ?? const SizedBox.shrink()),
-      home: settings.onboardingDone
-          ? const HomeShell()
-          : const OnboardingScreen(),
+      home: !settings.introSeen
+          ? const IntroScreen()
+          : !settings.onboardingDone
+              ? const OnboardingScreen()
+              : (settings.pinEnabled && !ref.watch(appUnlockedProvider))
+                  ? const PinGateScreen()
+                  : const HomeShell(),
     );
   }
 }

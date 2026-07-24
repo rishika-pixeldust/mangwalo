@@ -8,7 +8,7 @@ void main() {
   Listing make(
     String id, {
     ListingType type = ListingType.offer,
-    Category category = Category.toolsRepair,
+    Category category = Category.sportsKits,
     String title = 'Test item',
     String description = 'A perfectly ordinary description.',
     String area = 'Near the market',
@@ -27,6 +27,7 @@ void main() {
       category: category,
       area: area,
       neighborhood: 'Powai',
+      pricePerDayInr: 900,
       status: status,
       lendingState: lendingState,
       dueDate: dueDate,
@@ -47,10 +48,10 @@ void main() {
 
     test('category filter', () {
       final listings = [
-        make('a', category: Category.booksStudy),
-        make('b', category: Category.toolsRepair),
+        make('a', category: Category.designerBags),
+        make('b', category: Category.sportsKits),
       ];
-      const filter = FeedFilter(category: Category.booksStudy);
+      const filter = FeedFilter(category: Category.designerBags);
       expect(filter.apply(listings, now).map((l) => l.id), ['a']);
     });
 

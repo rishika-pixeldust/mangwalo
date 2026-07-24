@@ -5,117 +5,105 @@ import 'local_ai_service.dart';
 /// ordered lists, declaration-order iteration, no runtime construction.
 ///
 /// Multi-word entries are matched as phrases against bigrams/trigrams and
-/// score 3 points; single words score 1. Tuned for the Mumbai borrow-lend
-/// domain, Hinglish included.
+/// score 3 points; single words score 1. Tuned for the luxury-rental domain
+/// — designer bags, occasion wear, sports kits — Hinglish included.
 abstract final class KeywordRules {
   static const categoryKeywords = <Category, List<String>>{
-    Category.toolsRepair: [
-      'drill', 'drill machine', 'hammer', 'hathoda', 'screwdriver',
-      'screw driver', 'pechkas', 'spanner', 'wrench', 'pliers', 'toolkit',
-      'tool kit', 'tool box', 'ladder', 'sidi', 'step ladder', 'saw',
-      'hacksaw', 'allen key', 'glue gun', 'soldering iron', 'multimeter',
-      'measuring tape', 'inch tape', 'paint roller', 'tile cutter',
-      'car jack', 'air pump',
+    Category.designerBags: [
+      'handbag', 'hand bag', 'bag', 'purse', 'tote', 'tote bag', 'sling',
+      'sling bag', 'shoulder bag', 'satchel', 'hobo bag', 'baguette bag',
+      'crossbody', 'cross body', 'mini bag', 'flap bag', 'saddle bag',
+      'bucket bag', 'chain bag', 'quilted bag', 'evening bag',
+      'designer bag', 'vanity case', 'birkin', 'kelly bag', 'duffle',
     ],
-    Category.kitchenAppliances: [
-      'mixer', 'mixie', 'mixer grinder', 'grinder', 'blender', 'hand blender',
-      'kadhai', 'kadai', 'wok', 'cooker', 'pressure cooker', 'tawa', 'tava',
-      'idli stand', 'idli maker', 'dosa tawa', 'otg', 'oven', 'microwave',
-      'air fryer', 'airfryer', 'toaster', 'sandwich maker', 'juicer',
-      'chopper', 'kettle', 'casserole', 'patila', 'chakla belan', 'appe pan',
-      'gas stove', 'induction',
+    Category.eventWear: [
+      'lehenga', 'lehnga', 'bridal lehenga', 'saree', 'sari', 'silk saree',
+      'kanjeevaram', 'kanjivaram', 'banarasi', 'sherwani', 'bandhgala',
+      'jodhpuri', 'achkan', 'gown', 'evening gown', 'ball gown',
+      'reception gown', 'anarkali', 'wedding dress', 'engagement dress',
+      'sangeet outfit', 'mehendi outfit', 'tuxedo', 'tux',
+      'three piece suit', 'suit set', 'indo western', 'kurta set',
     ],
-    Category.booksStudy: [
-      'book', 'books', 'novel', 'novels', 'textbook', 'text book', 'kitab',
-      'comics', 'magazine', 'magazines', 'encyclopedia', 'dictionary',
-      'atlas', 'study material', 'ncert', 'jee', 'neet', 'upsc',
-      'sample papers', 'question bank', 'storybook', 'story book',
-      'biography', 'manga',
+    Category.partyWear: [
+      'party dress', 'cocktail dress', 'little black dress', 'lbd',
+      'sequin dress', 'shimmer dress', 'bodycon', 'jumpsuit', 'party gown',
+      'mini dress', 'midi dress', 'slip dress', 'party wear', 'club wear',
+      'theme party', 'costume', 'party shirt', 'velvet blazer', 'blazer',
+      'satin shirt', 'co ord set', 'coord set',
     ],
-    Category.sportsFitness: [
-      'cycle', 'bicycle', 'badminton', 'racket', 'racquet', 'shuttlecock',
-      'tt', 'table tennis', 'tt bat', 'cricket', 'cricket bat', 'bat',
-      'stumps', 'wickets', 'football', 'basketball', 'volleyball', 'carrom',
-      'chess', 'skates', 'skateboard', 'yoga mat', 'dumbbell', 'dumbbells',
-      'kettlebell', 'treadmill', 'exercise cycle', 'frisbee',
-      'swimming goggles',
+    Category.sportsKits: [
+      'cricket kit', 'cricket bat', 'cricket', 'batting pads',
+      'keeping gloves', 'helmet', 'golf set', 'golf clubs', 'golf',
+      'tennis racket', 'badminton kit', 'badminton racket', 'badminton',
+      'racket', 'racquet', 'football kit', 'football studs', 'studs',
+      'jersey', 'ski suit', 'ski gear', 'skis', 'snowboard',
+      'trekking gear', 'trek kit', 'camping kit', 'cycling helmet', 'cycle',
+      'yoga kit', 'gym kit', 'skates', 'skateboard', 'swimming kit',
+      'scuba', 'bowling kit',
     ],
-    Category.outdoorsTravel: [
-      'tent', 'sleeping bag', 'trekking pole', 'trekking', 'camping',
-      'camp stove', 'icebox', 'ice box', 'esky', 'cooler box', 'suitcase',
-      'trolley bag', 'strolley', 'duffel', 'backpack', 'rucksack',
-      'haversack', 'travel adapter', 'neck pillow', 'luggage', 'binoculars',
-      'headlamp', 'hammock', 'picnic mat', 'raincoat',
+    Category.jewellery: [
+      'necklace', 'necklace set', 'jhumka', 'jhumkas', 'earrings',
+      'chandbali', 'maang tikka', 'maang teeka', 'mangtika', 'kada',
+      'bangle', 'bangles', 'choker', 'polki', 'polki set', 'kundan',
+      'kundan set', 'diamond set', 'temple jewellery', 'jewellery set',
+      'jewelry set', 'haar', 'rani haar', 'nath', 'nose ring', 'payal',
+      'anklet', 'bracelet', 'pendant', 'cocktail ring',
     ],
-    Category.electronics: [
-      'projector', 'tripod', 'camera', 'dslr', 'gopro', 'action camera',
-      'speaker', 'bluetooth speaker', 'soundbar', 'mic', 'microphone',
-      'extension board', 'extension cord', 'power bank', 'powerbank',
-      'router', 'monitor', 'keyboard', 'mouse', 'laptop', 'tablet', 'ipad',
-      'kindle', 'headphones', 'earphones', 'drone', 'printer', 'hard disk',
-      'pen drive', 'hdmi cable', 'charger', 'webcam', 'gimbal',
+    Category.watches: [
+      'watch', 'watches', 'wrist watch', 'wristwatch', 'chronograph',
+      'luxury watch', 'automatic watch', 'dive watch', 'dress watch',
+      'pocket watch', 'gold watch', 'rose gold watch', 'skeleton watch',
+      'swiss watch', 'smartwatch', 'smart watch',
     ],
-    Category.musicInstruments: [
-      'guitar', 'ukulele', 'casio', 'casio keyboard', 'music keyboard',
-      'keyboard piano', 'synthesizer', 'synth', 'piano', 'harmonium',
-      'tabla', 'dholak', 'dhol', 'flute', 'bansuri', 'violin', 'drums',
-      'drum kit', 'bongo', 'cajon', 'mouth organ', 'harmonica',
-      'karaoke machine', 'amplifier', 'capo', 'guitar strings', 'sitar',
-      'shruti box',
+    Category.accessories: [
+      'clutch', 'clutch bag', 'potli', 'potli bag', 'stole', 'shawl',
+      'pashmina', 'scarf', 'belt', 'designer belt', 'sunglasses', 'shades',
+      'tie', 'silk tie', 'bow tie', 'bowtie', 'pocket square', 'cufflinks',
+      'cuff links', 'brooch', 'tiara', 'evening gloves', 'juti', 'jutti',
+      'mojari', 'safa', 'pagdi', 'turban', 'kamarbandh', 'waist belt',
+      'hair accessories',
     ],
-    Category.kidsToys: [
-      'pram', 'stroller', 'walker', 'baby walker', 'cradle', 'jhula',
-      'palna', 'car seat', 'baby carrier', 'high chair', 'highchair',
-      'toys', 'lego', 'tricycle', 'kids cycle', 'training wheels',
-      'bouncer', 'dollhouse', 'doll house', 'board game', 'board games',
-      'remote control car', 'rc car', 'soft toys', 'puzzle', 'playpen',
-      'play mat', 'ludo', 'carrom board',
-    ],
-    Category.festivalDecor: [
-      'diwali lights', 'fairy lights', 'string lights', 'led strip',
-      'rangoli', 'rangoli stencil', 'diya', 'diyas', 'diya stand', 'ganpati',
-      'ganpati decoration', 'makhar', 'toran', 'garland', 'kandil',
-      'akash kandil', 'lantern', 'lanterns', 'christmas tree', 'xmas tree',
-      'santa costume', 'birthday banner', 'balloon pump', 'balloons',
-      'party lights', 'disco light', 'dandiya', 'dandiya sticks', 'garba',
-      'aarti thali', 'mandap',
-    ],
-    Category.homeFurniture: [
-      'folding table', 'folding chair', 'chair', 'chairs', 'table',
-      'mattress', 'gadda', 'cot', 'iron', 'istri', 'steam iron',
-      'sewing machine', 'silai machine', 'silai', 'vacuum', 'vacuum cleaner',
-      'fan', 'pedestal fan', 'table fan', 'air cooler', 'heater',
-      'room heater', 'blower', 'bucket', 'stool', 'chatai', 'razai',
-      'blanket', 'quilt', 'inverter', 'shoe rack', 'drying stand',
-    ],
-    // Category.other has no keywords — it is the null result, never scored.
   };
 
-  /// Canonical casing for brands commonly lent around Mumbai households.
+  /// Canonical casing for recognized brands (lowercased key as it appears
+  /// in normalized text).
   static const brandCasing = <String, String>{
-    'bosch': 'Bosch', 'stanley': 'Stanley', 'prestige': 'Prestige',
-    'hawkins': 'Hawkins', 'philips': 'Philips', 'bajaj': 'Bajaj',
-    'butterfly': 'Butterfly', 'preethi': 'Preethi', 'sujata': 'Sujata',
-    'usha': 'Usha', 'singer': 'Singer', 'godrej': 'Godrej', 'kent': 'Kent',
-    'havells': 'Havells', 'ifb': 'IFB', 'lg': 'LG', 'samsung': 'Samsung',
-    'sony': 'Sony', 'jbl': 'JBL', 'boat': 'boAt', 'canon': 'Canon',
-    'nikon': 'Nikon', 'gopro': 'GoPro', 'dji': 'DJI', 'casio': 'Casio',
-    'yamaha': 'Yamaha', 'fender': 'Fender', 'yonex': 'Yonex', 'sg': 'SG',
-    'mrf': 'MRF', 'cosco': 'Cosco', 'nivia': 'Nivia', 'hero': 'Hero',
-    'atlas': 'Atlas', 'bsa': 'BSA', 'firefox': 'Firefox', 'btwin': 'Btwin',
-    'decathlon': 'Decathlon', 'quechua': 'Quechua', 'wildcraft': 'Wildcraft',
-    'vip': 'VIP', 'safari': 'Safari', 'skybags': 'Skybags',
-    'milton': 'Milton', 'borosil': 'Borosil', 'pigeon': 'Pigeon',
+    'gucci': 'Gucci', 'louis vuitton': 'Louis Vuitton', 'lv': 'LV',
+    'chanel': 'Chanel', 'dior': 'Dior', 'prada': 'Prada',
+    'hermes': 'Hermès', 'coach': 'Coach', 'michael kors': 'Michael Kors',
+    'kate spade': 'Kate Spade', 'fendi': 'Fendi', 'burberry': 'Burberry',
+    'ysl': 'YSL', 'saint laurent': 'Saint Laurent',
+    'bottega': 'Bottega Veneta', 'sabyasachi': 'Sabyasachi',
+    'manish malhotra': 'Manish Malhotra', 'anita dongre': 'Anita Dongre',
+    'tarun tahiliani': 'Tarun Tahiliani', 'ritu kumar': 'Ritu Kumar',
+    'rolex': 'Rolex', 'omega': 'Omega', 'tag heuer': 'TAG Heuer',
+    'tissot': 'Tissot', 'rado': 'Rado', 'seiko': 'Seiko', 'casio': 'Casio',
+    'titan': 'Titan', 'fossil': 'Fossil',
+    'daniel wellington': 'Daniel Wellington', 'cartier': 'Cartier',
+    'tanishq': 'Tanishq', 'amrapali': 'Amrapali', 'swarovski': 'Swarovski',
+    'yonex': 'Yonex', 'li ning': 'Li-Ning', 'sg': 'SG', 'ss': 'SS',
+    'mrf': 'MRF', 'kookaburra': 'Kookaburra', 'gray nicolls': 'Gray-Nicolls',
+    'callaway': 'Callaway', 'taylormade': 'TaylorMade', 'wilson': 'Wilson',
+    'babolat': 'Babolat', 'decathlon': 'Decathlon', 'nike': 'Nike',
+    'adidas': 'Adidas', 'puma': 'Puma',
   };
 
-  /// Acronyms that must keep their casing inside generated titles.
+  /// Brands that double the suggested rate — the premium tier.
+  static const premiumBrands = <String>{
+    'louis vuitton', 'lv', 'chanel', 'dior', 'hermes', 'gucci', 'prada',
+    'bottega', 'fendi', 'burberry', 'ysl', 'saint laurent', 'cartier',
+    'rolex', 'omega', 'tag heuer', 'sabyasachi', 'manish malhotra',
+    'tarun tahiliani',
+  };
+
+  /// Words that keep their special casing inside titles.
   static const acronymCasing = <String, String>{
-    'tt': 'TT', 'ncert': 'NCERT', 'dslr': 'DSLR', 'otg': 'OTG', 'led': 'LED',
-    'rc': 'RC', 'jee': 'JEE', 'neet': 'NEET', 'upsc': 'UPSC', 'hdmi': 'HDMI',
+    'lv': 'LV', 'ysl': 'YSL', 'lbd': 'LBD', 'sg': 'SG', 'ss': 'SS',
+    'mrf': 'MRF', 'tt': 'TT',
   };
 
-  /// Longest-phrase-first condition extraction; multiple tags may apply
-  /// ("purana hai par chalta hai" → well-worn AND working).
+  /// Phrase → condition tag. Longest-phrase entries listed first for
+  /// readability; matching itself is per-entry and order-independent.
   static const conditionPhrases = <String, ConditionTag>{
     'brand new': ConditionTag.likeNew,
     'bilkul naya': ConditionTag.likeNew,
@@ -123,28 +111,35 @@ abstract final class KeywordRules {
     'naya hai': ConditionTag.likeNew,
     'unused': ConditionTag.likeNew,
     'never used': ConditionTag.likeNew,
+    'never worn': ConditionTag.likeNew,
     'seal pack': ConditionTag.likeNew,
     'box packed': ConditionTag.likeNew,
     'almost new': ConditionTag.likeNew,
-    'like new': ConditionTag.likeNew,
+    'with box': ConditionTag.likeNew,
+    'with dust bag': ConditionTag.likeNew,
+    'with authenticity card': ConditionTag.likeNew,
+    'dry cleaned': ConditionTag.likeNew,
     'barely used': ConditionTag.gentlyUsed,
     'hardly used': ConditionTag.gentlyUsed,
     'lightly used': ConditionTag.gentlyUsed,
     'sparingly used': ConditionTag.gentlyUsed,
     'gently used': ConditionTag.gentlyUsed,
+    'gently loved': ConditionTag.gentlyUsed,
     'good condition': ConditionTag.gentlyUsed,
     'achhi condition': ConditionTag.gentlyUsed,
     'well maintained': ConditionTag.gentlyUsed,
     'used once': ConditionTag.gentlyUsed,
     'used twice': ConditionTag.gentlyUsed,
+    'worn once': ConditionTag.gentlyUsed,
+    'worn twice': ConditionTag.gentlyUsed,
+    'old': ConditionTag.wellWorn,
+    'purana': ConditionTag.wellWorn,
     'thoda purana': ConditionTag.wellWorn,
     'worn out': ConditionTag.wellWorn,
     'well used': ConditionTag.wellWorn,
     'scratches': ConditionTag.wellWorn,
     'dents': ConditionTag.wellWorn,
     'many years old': ConditionTag.wellWorn,
-    'purana': ConditionTag.wellWorn,
-    'old': ConditionTag.wellWorn,
     'works fine': ConditionTag.working,
     'working condition': ConditionTag.working,
     'fully functional': ConditionTag.working,
@@ -154,30 +149,37 @@ abstract final class KeywordRules {
     'running condition': ConditionTag.working,
     'works well': ConditionTag.working,
     'in working order': ConditionTag.working,
-    'works': ConditionTag.working,
   };
 
-  /// Suggested lending window per category. Fixed labels — the engine never
-  /// reads the clock; the lending feature applies `today + days` later.
+  /// Suggested rental window per category — prefills the return-date picker.
   static const loanDurations = <Category, LoanDuration>{
-    Category.toolsRepair:
-        LoanDuration(days: 3, label: '3 days — most repairs are quick'),
-    Category.kitchenAppliances: LoanDuration(days: 7, label: '1 week'),
-    Category.booksStudy: LoanDuration(days: 14, label: '2 weeks'),
-    Category.sportsFitness: LoanDuration(days: 7, label: '1 week'),
-    Category.outdoorsTravel:
-        LoanDuration(days: 10, label: '10 days — covers a trip'),
-    Category.electronics: LoanDuration(days: 3, label: '3 days'),
-    Category.musicInstruments: LoanDuration(days: 14, label: '2 weeks'),
-    Category.kidsToys: LoanDuration(days: 14, label: '2 weeks'),
-    Category.festivalDecor: LoanDuration(
-        days: 7, label: 'About a week — return after the festival'),
-    Category.homeFurniture: LoanDuration(days: 30, label: '1 month'),
+    Category.designerBags: LoanDuration(days: 7, label: '1 week'),
+    Category.eventWear:
+        LoanDuration(days: 3, label: '3 days — covers the occasion'),
+    Category.partyWear:
+        LoanDuration(days: 2, label: '2 days — party and back'),
+    Category.sportsKits:
+        LoanDuration(days: 14, label: '2 weeks — a season taste'),
+    Category.jewellery:
+        LoanDuration(days: 2, label: '2 days — the event and a buffer'),
+    Category.watches: LoanDuration(days: 3, label: '3 days'),
+    Category.accessories: LoanDuration(days: 3, label: '3 days'),
   };
 
-  static const defaultLoanDuration = LoanDuration(days: 7, label: '1 week');
+  static const defaultLoanDuration = LoanDuration(days: 3, label: '3 days');
 
-  /// Stopwords skipped by the fallback title generator.
+  /// Base rate suggestion per category in whole ₹/day. A recognized premium
+  /// brand doubles it. Deterministic — no market lookup.
+  static const basePricePerDayInr = <Category, int>{
+    Category.designerBags: 2500,
+    Category.eventWear: 3000,
+    Category.partyWear: 1500,
+    Category.sportsKits: 800,
+    Category.jewellery: 2000,
+    Category.watches: 1500,
+    Category.accessories: 600,
+  };
+
   static const stopwords = <String>{
     'the', 'a', 'an', 'hai', 'ka', 'ki', 'ke', 'for', 'my', 'hi', 'hello',
     'i', 'need', 'want', 'have', 'and', 'or', 'to', 'of', 'in', 'on',

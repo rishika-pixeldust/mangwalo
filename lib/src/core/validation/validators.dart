@@ -62,6 +62,33 @@ abstract final class Validators {
     return null;
   }
 
+  static const priceMin = 50;
+  static const priceMax = 100000;
+  static const depositMax = 500000;
+
+  /// Rental rate in whole ₹/day. Required for offers AND requests (where it
+  /// reads as the budget).
+  static String? pricePerDay(String? value) {
+    final v = sanitize(value ?? '').replaceAll(',', '');
+    if (v.isEmpty) return 'Set a daily rate in rupees.';
+    final n = int.tryParse(v);
+    if (n == null) return 'Whole rupees only, e.g. 2500.';
+    if (n < priceMin) return 'Rate must be at least ₹$priceMin/day.';
+    if (n > priceMax) return 'Keep the rate under ₹$priceMax/day.';
+    return null;
+  }
+
+  /// Optional refundable deposit in whole ₹.
+  static String? deposit(String? value) {
+    final v = sanitize(value ?? '').replaceAll(',', '');
+    if (v.isEmpty) return null;
+    final n = int.tryParse(v);
+    if (n == null) return 'Whole rupees only, e.g. 15000.';
+    if (n < 0) return 'Deposit cannot be negative.';
+    if (n > depositMax) return 'Keep the deposit under ₹$depositMax.';
+    return null;
+  }
+
   static String? contactNote(String? value) {
     final v = sanitize(value ?? '');
     if (v.length > contactNoteMax) {

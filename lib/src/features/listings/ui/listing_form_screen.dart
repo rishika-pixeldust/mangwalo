@@ -34,13 +34,15 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
   final _descriptionController = TextEditingController();
   final _areaController = TextEditingController();
   final _contactNoteController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _depositController = TextEditingController();
 
   ListingType _type = ListingType.offer;
   Category? _category;
   ContactChannel _contactChannel = ContactChannel.societyBoard;
   final Set<String> _conditionTags = {};
   int? _suggestedDurationDays;
-  String? _photoBase64;
+  final List<String> _photos = [];
   bool _pickingPhoto = false;
   List<PrivacyWarning> _warnings = const [];
   Listing? _existing;
@@ -58,8 +60,10 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
         _contactChannel = existing.contactChannel;
         _conditionTags.addAll(existing.conditionTags);
         _suggestedDurationDays = existing.suggestedDurationDays;
-        _photoBase64 = existing.photoBase64;
+        _photos.addAll(existing.photos);
         _titleController.text = existing.title;
+        _priceController.text = existing.pricePerDayInr.toString();
+        _depositController.text = existing.depositInr?.toString() ?? '';
         _descriptionController.text = existing.description;
         _areaController.text = existing.area;
         _contactNoteController.text = existing.contactNote;
@@ -79,15 +83,18 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
     _descriptionController.dispose();
     _areaController.dispose();
     _contactNoteController.dispose();
+    _priceController.dispose();
+    _depositController.dispose();
     super.dispose();
   }
 
   Future<void> _pickPhoto() async {
+    if (_photos.length >= kMaxListingPhotos) return;
     setState(() => _pickingPhoto = true);
     try {
       final encoded = await pickAndEncodeListingPhoto();
       if (encoded != null && mounted) {
-        setState(() => _photoBase64 = encoded);
+        setState(() => _photos.add(encoded));
       }
     } finally {
       if (mounted) setState(() => _pickingPhoto = false);
@@ -113,8 +120,12 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
     final area = sanitize(_areaController.text, maxLength: Validators.areaMax);
     final contactNote = sanitize(_contactNoteController.text,
         maxLength: Validators.contactNoteMax);
-    final category = _category ?? Category.other;
+    final category = _category ?? Category.accessories;
     final tags = _conditionTags.toList()..sort();
+    final price =
+        int.parse(sanitize(_priceController.text).replaceAll(',', ''));
+    final depositText = sanitize(_depositController.text).replaceAll(',', '');
+    final deposit = depositText.isEmpty ? null : int.parse(depositText);
 
     final existing = _existing;
     final listing = existing != null
@@ -127,8 +138,10 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
             area: area,
             contactChannel: _contactChannel,
             contactNote: contactNote,
+            pricePerDayInr: price,
+            depositInr: deposit,
             suggestedDurationDays: _suggestedDurationDays,
-            photoBase64: _photoBase64,
+            photos: List.unmodifiable(_photos),
             updatedAt: now,
           )
         : Listing(
@@ -142,8 +155,10 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
             neighborhood: neighborhood,
             contactChannel: _contactChannel,
             contactNote: contactNote,
+            pricePerDayInr: price,
+            depositInr: deposit,
             suggestedDurationDays: _suggestedDurationDays,
-            photoBase64: _photoBase64,
+            photos: List.unmodifiable(_photos),
             createdAt: now,
             updatedAt: now,
             isMine: true,
@@ -196,12 +211,12 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
                 segments: const [
                   ButtonSegment(
                     value: ListingType.offer,
-                    label: Text('I can lend'),
+                    label: Text('Rent out'),
                     icon: Icon(Icons.volunteer_activism_outlined),
                   ),
                   ButtonSegment(
                     value: ListingType.request,
-                    label: Text('I need'),
+                    label: Text('Looking for'),
                     icon: Icon(Icons.front_hand_outlined),
                   ),
                 ],
@@ -223,8 +238,8 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
               textInputAction: TextInputAction.newline,
               decoration: const InputDecoration(
                 labelText: 'Description',
-                hintText: 'e.g. Bosch drill machine, thoda purana but '
-                    'works fine. Weekends preferred.',
+                hintText: 'e.g. Chanel flap bag, barely used, with dust '
+                    'bag. Weekends only.',
                 helperText: 'Describe the item — suggestions appear as '
                     'you type.',
                 helperMaxLines: 2,
@@ -280,6 +295,10 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
               durationApplied: _suggestedDurationDays != null &&
                   _suggestedDurationDays ==
                       suggestion.suggestedLoanDuration?.days,
+              priceApplied: _priceController.text ==
+                  suggestion.suggestedPricePerDayInr?.toString(),
+              onApplyPrice: (price) =>
+                  setState(() => _priceController.text = price.toString()),
               onApplyTitle: (title) =>
                   setState(() => _titleController.text = title),
               onApplyCategory: () => setState(
@@ -300,7 +319,7 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
               onChanged: (_) => setState(() => _warnings = _scanFreeText()),
               decoration: const InputDecoration(
                 labelText: 'Title',
-                hintText: 'Short and clear, e.g. "Bosch Drill Machine"',
+                hintText: 'Short and clear, e.g. "Chanel Classic Flap bag"',
               ),
             ),
             const SizedBox(height: 12),
@@ -319,6 +338,40 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
               validator: (value) =>
                   value == null ? 'Pick a category.' : null,
               onChanged: (value) => setState(() => _category = value),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _priceController,
+                    validator: Validators.pricePerDay,
+                    keyboardType: TextInputType.number,
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText:
+                          _type == ListingType.request ? 'Budget (₹/day)' : 'Rate (₹/day)',
+                      hintText: 'e.g. 2500',
+                      prefixText: '₹ ',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _depositController,
+                    validator: Validators.deposit,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Deposit (optional)',
+                      hintText: 'e.g. 15000',
+                      prefixText: '₹ ',
+                      helperText: 'Refundable.',
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -356,53 +409,75 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Photo (optional)', style: theme.textTheme.titleSmall),
+            Text('Photos (up to $kMaxListingPhotos)',
+                style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
-            if (_photoBase64 != null) ...[
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Semantics(
-                      label: 'Selected item photo',
-                      image: true,
-                      child: Image.memory(
-                        base64Decode(_photoBase64!),
-                        height: 160,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        gaplessPlayback: true,
+            if (_photos.isNotEmpty) ...[
+              SizedBox(
+                height: 96,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _photos.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (context, i) => Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Semantics(
+                          label:
+                              'Photo ${i + 1} of ${_photos.length}'
+                              '${i == 0 ? ' — cover' : ''}',
+                          image: true,
+                          child: Image.memory(
+                            base64Decode(_photos[i]),
+                            width: 96,
+                            height: 96,
+                            fit: BoxFit.cover,
+                            gaplessPlayback: true,
+                          ),
+                        ),
                       ),
-                    ),
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: Semantics(
+                          label: 'Remove photo ${i + 1}',
+                          button: true,
+                          onTap: () => setState(() => _photos.removeAt(i)),
+                          child: ExcludeSemantics(
+                            child: IconButton.filledTonal(
+                              visualDensity: VisualDensity.compact,
+                              icon: const Icon(Icons.close, size: 16),
+                              onPressed: () =>
+                                  setState(() => _photos.removeAt(i)),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: IconButton.filledTonal(
-                      tooltip: 'Remove photo',
-                      icon: const Icon(Icons.close),
-                      onPressed: () => setState(() => _photoBase64 = null),
-                    ),
-                  ),
-                ],
+                ),
               ),
               const SizedBox(height: 8),
             ],
             OutlinedButton.icon(
-              onPressed: _pickingPhoto ? null : _pickPhoto,
+              onPressed: (_pickingPhoto || _photos.length >= kMaxListingPhotos)
+                  ? null
+                  : _pickPhoto,
               icon: const Icon(Icons.add_a_photo_outlined),
               label: Text(_pickingPhoto
                   ? 'Preparing photo…'
-                  : _photoBase64 == null
-                      ? 'Add a photo'
-                      : 'Replace photo'),
+                  : _photos.length >= kMaxListingPhotos
+                      ? 'Gallery full ($kMaxListingPhotos/$kMaxListingPhotos)'
+                      : 'Add photo (${_photos.length}/$kMaxListingPhotos)'),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Downscaled and stored only on this device.',
+              'First photo becomes the cover. Downscaled and stored only '
+              'on this device.',
               style: theme.textTheme.bodySmall
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),

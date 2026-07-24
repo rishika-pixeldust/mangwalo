@@ -10,7 +10,7 @@ class RuleBasedListingAi implements LocalAiService {
 
   @override
   AiEngineInfo get engineInfo => const AiEngineInfo(
-        name: 'Rule engine v1',
+        name: 'Rule engine v2 (luxe)',
         isOnDevice: true,
         userFacingNote:
             'Suggestions are generated on-device and work offline. '
@@ -40,12 +40,14 @@ class RuleBasedListingAi implements LocalAiService {
         ? (KeywordRules.loanDurations[category] ??
             KeywordRules.defaultLoanDuration)
         : KeywordRules.defaultLoanDuration;
+    final price = _suggestPrice(category, padded);
 
     return ListingSuggestion(
       suggestedTitle: title,
       suggestedCategory: category,
       conditionTags: tags,
       suggestedLoanDuration: duration,
+      suggestedPricePerDayInr: price,
       confidence: switch (score) {
         0 => SuggestionConfidence.none,
         1 || 2 => SuggestionConfidence.low,
@@ -53,6 +55,16 @@ class RuleBasedListingAi implements LocalAiService {
         _ => SuggestionConfidence.high,
       },
     );
+  }
+
+  /// Category base rate, doubled when a premium brand appears anywhere in
+  /// the text. Deterministic: fixed tables, no market data.
+  int? _suggestPrice(Category? category, String padded) {
+    final base = KeywordRules.basePricePerDayInr[category];
+    if (base == null) return null;
+    final premium = KeywordRules.premiumBrands
+        .any((brand) => padded.contains(' $brand '));
+    return premium ? base * 2 : base;
   }
 
   static final _nonWord = RegExp(r'[^a-z0-9+&\s]');

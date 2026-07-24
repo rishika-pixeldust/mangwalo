@@ -17,19 +17,28 @@ account or publishing their address.
 
 ## The slice (in scope)
 
-- Browse a single neighborhood's noticeboard: **offers** and **requests**, with a
-  **Noticeboard / My-items split** and a lending summary for your own items
+- Browse a single neighborhood's luxury board: **For rent** and **Wanted** posts
+  across seven categories (designer bags, event wear, party wear, sports kits,
+  jewellery, watches, accessories), with a **Noticeboard / My-items split** and a
+  lending summary for your own items
+- **₹/day pricing on every card** (budget on Wanted posts) plus an optional
+  refundable deposit on the detail page
 - Filter by type and category, search by text, hide/show closed listings
 - Create and edit listings: title, description, category, condition tags,
-  landmark-level area, contact channel + note, and an **optional photo**
-  (downscaled and stored on-device only)
-- On-device listing helper: suggested title, category, condition tags, and lending
-  duration from the free-text description (deterministic, offline)
+  landmark-level area, contact channel + note, and **up to five photos** with a
+  swipeable preview gallery (downscaled, EXIF-stripped, stored on-device only)
+- On-device listing helper: suggested title, category, condition tags, rental
+  window, and **₹/day rate** (premium brands double the base) from the free-text
+  description (deterministic, offline)
 - Status lifecycle per listing: **saved → contacted → closed**
 - Item lifecycle: **available → lent out (with expected return date and borrower
   first name) → returned**
 - **Return-date tracking** *(personal product feature)*: due/overdue badges in feed
-  and detail, overdue-first sorting, AI-suggested duration prefills the date picker
+  and detail, overdue-first sorting, AI-suggested window prefills the date picker
+- **Reviews**: 5-star + text feedback per listing covering the item and the person;
+  aggregate rating on every card
+- Three-page concept intro on first launch (skippable); local profile (first
+  name) with an optional salted-hash app PIN that locks the app on launch
 - First-launch neighborhood picker; auto-loaded (and removable) sample data; full
   local data reset
 

@@ -2,27 +2,23 @@ import 'package:flutter/material.dart';
 
 import '../../features/listings/domain/listing.dart';
 
-/// Visual identity per category — feed cards scan faster with a glyph.
-/// Bundled Material icons (not emoji): they render identically everywhere
-/// with zero runtime font fetches, keeping the app fully local.
+/// Visual identity per catalog category — bundled Material icons (not
+/// emoji): they render identically everywhere with zero runtime font
+/// fetches, keeping the app fully local.
 extension CategoryIcon on Category {
   IconData get icon => switch (this) {
-        Category.toolsRepair => Icons.handyman_outlined,
-        Category.kitchenAppliances => Icons.soup_kitchen_outlined,
-        Category.booksStudy => Icons.menu_book_outlined,
-        Category.sportsFitness => Icons.sports_tennis_outlined,
-        Category.outdoorsTravel => Icons.landscape_outlined,
-        Category.electronics => Icons.camera_alt_outlined,
-        Category.musicInstruments => Icons.music_note_outlined,
-        Category.kidsToys => Icons.toys_outlined,
-        Category.festivalDecor => Icons.celebration_outlined,
-        Category.homeFurniture => Icons.chair_outlined,
-        Category.other => Icons.inventory_2_outlined,
+        Category.designerBags => Icons.shopping_bag_outlined,
+        Category.eventWear => Icons.checkroom_outlined,
+        Category.partyWear => Icons.celebration_outlined,
+        Category.sportsKits => Icons.sports_tennis_outlined,
+        Category.jewellery => Icons.diamond_outlined,
+        Category.watches => Icons.watch_outlined,
+        Category.accessories => Icons.style_outlined,
       };
 }
 
-/// Rounded category tile used as the card leading visual when a listing has
-/// no photo.
+/// Rounded category tile used as the card visual when a listing has no
+/// photos yet.
 class CategoryAvatar extends StatelessWidget {
   const CategoryAvatar({super.key, required this.category, this.size = 52});
 

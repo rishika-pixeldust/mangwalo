@@ -6,18 +6,18 @@ FONTS = "assets/fonts"
 GOLD = "tool/demo/goldens"
 OUT = "tool/demo/slides"
 
-# Warm Ledger tokens (docs/design-system.md)
-CREAM = (243, 238, 230)
-TERRA = (242, 121, 60)
-TERRA_SOFT = (252, 228, 213)
-INK = (32, 27, 22)
-INK_SOFT = (138, 129, 120)
+# Velvet Ledger tokens (docs/design-system.md)
+CREAM = (246, 239, 234)          # ivory canvas
+TERRA = (126, 34, 49)            # oxblood accent
+TERRA_SOFT = (247, 220, 222)     # blush
+INK = (42, 23, 28)
+INK_SOFT = (142, 122, 128)
 
-heading_f = ImageFont.truetype(f"{FONTS}/PlusJakartaSans-ExtraBold.ttf", 78)
+heading_f = ImageFont.truetype(f"{FONTS}/PlayfairDisplay-Bold.ttf", 80)
 eyebrow_f = ImageFont.truetype(f"{FONTS}/PlusJakartaSans-SemiBold.ttf", 30)
 bullet_f = ImageFont.truetype(f"{FONTS}/PlusJakartaSans-Regular.ttf", 36)
 small_f = ImageFont.truetype(f"{FONTS}/PlusJakartaSans-Medium.ttf", 26)
-brand_f = ImageFont.truetype(f"{FONTS}/PlusJakartaSans-ExtraBold.ttf", 130)
+brand_f = ImageFont.truetype(f"{FONTS}/PlayfairDisplay-Bold.ttf", 132)
 tag_f = ImageFont.truetype(f"{FONTS}/PlusJakartaSans-Regular.ttf", 44)
 
 
@@ -58,8 +58,8 @@ def phone_card(path: str, height: int, crop=None) -> Image.Image:
 def base_canvas() -> Image.Image:
     c = Image.new("RGBA", (1920, 1080), CREAM + (255,))
     d = ImageDraw.Draw(c)
-    d.ellipse([1500, -350, 2350, 500], fill=(238, 229, 216, 255))
-    d.ellipse([-260, 760, 420, 1440], fill=(240, 232, 221, 255))
+    d.ellipse([1500, -350, 2350, 500], fill=(242, 229, 226, 255))
+    d.ellipse([-260, 760, 420, 1440], fill=(244, 233, 229, 255))
     d.text((110, 1006), "mangwalo.vercel.app", font=small_f, fill=TERRA)
     return c
 
@@ -94,14 +94,14 @@ c = base_canvas()
 d = ImageDraw.Draw(c)
 d.text((110, 250), spaced("MAL LAB 1 · FLUTTER & FOUNDATIONS"), font=eyebrow_f, fill=TERRA)
 d.text((100, 320), "MangWalo", font=brand_f, fill=TERRA)
-d.text((108, 480), "Maang lo — just ask.", font=tag_f, fill=INK)
+d.text((108, 490), "Maang lo — luxury from your locality.", font=tag_f, fill=INK)
 for i, b in enumerate([
-    "Local-first borrow & lend noticeboard",
-    "One Mumbai neighborhood per board",
-    "Flutter web PWA — everything stays on-device",
-    "Live at mangwalo.vercel.app",
+    "Rent designer bags, occasion wear & sports kits",
+    "From neighbors in one Mumbai locality",
+    "₹/day pricing, photo galleries, reviews",
+    "Local-first Flutter PWA — everything on-device",
 ]):
-    y = 590 + i * 62
+    y = 600 + i * 62
     d.ellipse([116, y + 17, 132, y + 33], fill=TERRA)
     d.text((156, y), b, font=bullet_f, fill=INK_SOFT)
 p1 = phone_card(f"{GOLD}/01_onboarding.png", 860)
@@ -113,11 +113,11 @@ save(c, "s0_intro")
 # S1 — product thinking
 c = base_canvas()
 d = ImageDraw.Draw(c)
-text_column(d, "01 · PRODUCT THINKING", ["One sharp slice,", "shipped."], [
-    "Offers and requests on one noticeboard",
-    "My-items view with a lending summary",
+text_column(d, "01 · PRODUCT THINKING", ["Luxury, priced", "and reviewed."], [
+    "Bold ₹/day rate on every nearby listing",
+    "Star reviews — the item AND the person",
     "Return-date tracking — overdue jumps the queue",
-    "Borrower names, due badges, status lifecycle",
+    "My-items rental book with renter names",
 ])
 p1 = phone_card(f"{GOLD}/03_myitems.png", 860)
 p2 = phone_card(f"{GOLD}/06_detail_lending.png", 860)
@@ -143,8 +143,8 @@ c = base_canvas()
 d = ImageDraw.Draw(c)
 text_column(d, "03 · LOCAL AI", ["On-device", "intelligence."], [
     "Deterministic rules engine — no cloud, no keys",
-    "Understands Hinglish descriptions",
-    "Suggests title, category, tags & duration",
+    "Knows Sabyasachi from SG — premium brands 2x",
+    "Suggests title, category, tags, window & ₹ rate",
     "Swappable LocalAiService boundary",
 ])
 p1 = phone_card(f"{GOLD}/04_ai_suggestions.png", 940, crop=(0, 400, 1290, 1870))
@@ -157,7 +157,7 @@ d = ImageDraw.Draw(c)
 text_column(d, "04 · SECURITY", ["Private by", "design."], [
     "Phone & address detection as you type",
     "Landmark-only locations, hard-enforced",
-    "Photos re-encoded — EXIF & GPS stripped",
+    "Gallery photos re-encoded — EXIF & GPS stripped",
     "One-tap reset of all local data",
 ])
 p1 = phone_card(f"{GOLD}/05_privacy_warning.png", 940, crop=(0, 400, 1290, 1920))
@@ -171,14 +171,14 @@ c = base_canvas()
 d = ImageDraw.Draw(c)
 d.text((110, 300), spaced("BUILT FOR MAL LAB 1 · GOING LIVE ANYWAY"), font=eyebrow_f, fill=TERRA)
 d.text((100, 370), "MangWalo", font=brand_f, fill=TERRA)
-d.text((108, 530), "Product thinking · Accessibility · Local AI · Security",
+d.text((108, 540), "Product thinking · Accessibility · Local AI · Security",
        font=tag_f, fill=INK)
 for i, b in enumerate([
     "mangwalo.vercel.app",
     "github.com/rishika-pixeldust/mangwalo",
-    "Maang lo — your neighborhood lends a hand.",
+    "Maang lo — luxury from your locality.",
 ]):
-    y = 640 + i * 62
+    y = 650 + i * 62
     d.ellipse([116, y + 17, 132, y + 33], fill=TERRA)
     d.text((156, y), b, font=bullet_f, fill=INK_SOFT)
 p1 = phone_card(f"{GOLD}/02_feed.png", 860)
