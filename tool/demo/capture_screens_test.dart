@@ -6,6 +6,11 @@
 // Renders real app screens at 3x phone resolution with real fonts and
 // writes them to tool/demo/goldens/*.png for the demo video + preview
 // gallery pipeline.
+//
+// NOTE: seed photos are loaded from disk (real File I/O) and listing
+// images are decoded from base64/asset bytes. Both are real-async work,
+// so they MUST run inside tester.runAsync() — otherwise they deadlock in
+// the widget tester's fake-async zone and the capture hangs forever.
 import 'dart:convert';
 import 'dart:io';
 
@@ -46,6 +51,12 @@ Future<void> _loadFonts() async {
     ..addFont(read('$_appFonts/PlusJakartaSans-Bold.ttf'))
     ..addFont(read('$_appFonts/PlusJakartaSans-ExtraBold.ttf'));
   await jakarta.load();
+
+  final playfair = FontLoader('PlayfairDisplay')
+    ..addFont(read('$_appFonts/PlayfairDisplay-Medium.ttf'))
+    ..addFont(read('$_appFonts/PlayfairDisplay-SemiBold.ttf'))
+    ..addFont(read('$_appFonts/PlayfairDisplay-Bold.ttf'));
+  await playfair.load();
 
   final icons = FontLoader('MaterialIcons')
     ..addFont(read('$_sdkFonts/MaterialIcons-Regular.otf'));
@@ -152,42 +163,69 @@ void main() {
     }
   }
 
+  // Real File I/O — must run in the real-async zone, not the fake one,
+  // or the seed-photo reads deadlock and the whole capture hangs.
+  Future<InMemoryListingRepository> board(WidgetTester tester,
+          {bool withMine = true}) async =>
+      (await tester.runAsync(() => _board(withMine: withMine)))!;
+
+  // Decode every Image (base64 memory photos + seed assets) so goldens
+  // paint real imagery instead of blank placeholders. Codecs are
+  // real-async, hence runAsync; a missing asset must not fail capture.
+  Future<void> decodeImages(WidgetTester tester) async {
+    await tester.runAsync(() async {
+      for (final element in find.byType(Image).evaluate()) {
+        try {
+          await precacheImage((element.widget as Image).image, element);
+        } catch (_) {}
+      }
+    });
+    await settle(tester);
+  }
+
   Future<void> shoot(WidgetTester tester, String name) => expectLater(
       find.byType(MaterialApp), matchesGoldenFile('goldens/$name.png'));
 
   testWidgets('00 intro', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const IntroScreen(), repo: await _board()));
+    await tester
+        .pumpWidget(_app(const IntroScreen(), repo: await board(tester)));
     await settle(tester);
+    await decodeImages(tester);
     await shoot(tester, '00_intro');
   });
 
   testWidgets('01 onboarding', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const OnboardingScreen(), repo: await _board()));
+    await tester
+        .pumpWidget(_app(const OnboardingScreen(), repo: await board(tester)));
     await settle(tester);
+    await decodeImages(tester);
     await shoot(tester, '01_onboarding');
   });
 
   testWidgets('02 board feed', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const HomeShell(), repo: await _board()));
+    await tester.pumpWidget(_app(const HomeShell(), repo: await board(tester)));
     await settle(tester);
+    await decodeImages(tester);
     await shoot(tester, '02_feed');
   });
 
   testWidgets('03 my items + hero', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const HomeShell(), repo: await _board()));
+    await tester.pumpWidget(_app(const HomeShell(), repo: await board(tester)));
     await settle(tester);
     await tester.tap(find.text('My items'));
     await settle(tester);
+    await decodeImages(tester);
     await shoot(tester, '03_myitems');
   });
 
   testWidgets('04 AI suggestions', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const ListingFormScreen(), repo: await _board()));
+    await tester
+        .pumpWidget(_app(const ListingFormScreen(), repo: await board(tester)));
     await settle(tester);
     await tester.enterText(find.byType(TextFormField).first,
         'chanel ka flap bag hai, barely used, with dust bag. weekends only');
@@ -198,7 +236,8 @@ void main() {
 
   testWidgets('05 privacy warnings', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const ListingFormScreen(), repo: await _board()));
+    await tester
+        .pumpWidget(_app(const ListingFormScreen(), repo: await board(tester)));
     await settle(tester);
     await tester.enterText(find.byType(TextFormField).first,
         'kundan necklace set for rent, call me on 98200 12345, flat no 402');
@@ -211,33 +250,37 @@ void main() {
     frame(tester);
     await tester.pumpWidget(_app(
         const ListingDetailScreen(listingId: 'mine-1'),
-        repo: await _board()));
+        repo: await board(tester)));
     await settle(tester);
+    await decodeImages(tester);
     await shoot(tester, '06_detail_lending');
   });
 
   testWidgets('07 text scale', (tester) async {
     frame(tester);
     await tester.pumpWidget(
-        _app(const FeedScreen(), repo: await _board(), textScale: 1.8));
+        _app(const FeedScreen(), repo: await board(tester), textScale: 1.8));
     await settle(tester);
+    await decodeImages(tester);
     await shoot(tester, '07_a11y_scale');
   });
 
   testWidgets('08 settings', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const HomeShell(), repo: await _board()));
+    await tester.pumpWidget(_app(const HomeShell(), repo: await board(tester)));
     await settle(tester);
     await tester.tap(find.text('Settings'));
     await settle(tester);
+    await decodeImages(tester);
     await shoot(tester, '08_settings');
   });
 
   testWidgets('09 board feed dark', (tester) async {
     frame(tester);
-    await tester.pumpWidget(
-        _app(const HomeShell(), repo: await _board(), mode: ThemeMode.dark));
+    await tester.pumpWidget(_app(const HomeShell(),
+        repo: await board(tester), mode: ThemeMode.dark));
     await settle(tester);
+    await decodeImages(tester);
     await shoot(tester, '09_feed_dark');
   });
 }
