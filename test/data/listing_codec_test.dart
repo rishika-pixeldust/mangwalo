@@ -9,11 +9,10 @@ void main() {
     title: 'Cricket bat, size 6',
     description: 'Kashmir-willow bat, lightly taped handle.',
     category: Category.sportsKits,
+    subCategory: 'Cricket',
     conditionTags: const ['Gently used'],
     area: 'Opposite Jogger\'s Park',
     neighborhood: 'Bandra West',
-    contactChannel: ContactChannel.buildingWhatsApp,
-    contactNote: 'R. Nair — building group',
     pricePerDayInr: 900,
     depositInr: 3000,
     status: InteractionStatus.contacted,
@@ -57,7 +56,8 @@ void main() {
       });
       expect(decoded, isNotNull);
       expect(decoded!.type, ListingType.offer);
-      expect(decoded.category, Category.accessories);
+      expect(decoded.category, Category.other);
+      expect(decoded.subCategory, isEmpty);
       expect(decoded.status, InteractionStatus.saved);
       expect(decoded.lendingState, LendingState.available);
       expect(decoded.conditionTags, isEmpty);
@@ -129,8 +129,42 @@ void main() {
         'status': 'ghosted',
       });
       expect(decoded!.type, ListingType.offer);
-      expect(decoded.category, Category.accessories);
+      expect(decoded.category, Category.other);
       expect(decoded.status, InteractionStatus.saved);
+    });
+
+    test('v2 contact fields are dropped, not migrated', () {
+      final decoded = ListingCodec.fromJsonMap({
+        'id': 'v2-row',
+        'title': 'Row with retired fields',
+        'contactChannel': 'buildingWhatsApp',
+        'contactNote': 'R. Nair — building group, ring twice',
+      })!;
+      // Re-encoding must not resurrect them: in-app messaging replaced both.
+      final reEncoded = ListingCodec.toJsonMap(decoded);
+      expect(reEncoded.containsKey('contactChannel'), isFalse);
+      expect(reEncoded.containsKey('contactNote'), isFalse);
+      expect(reEncoded['v'], 3);
+    });
+
+    test('over-long free-text sub-category is capped at the storage boundary',
+        () {
+      final decoded = ListingCodec.fromJsonMap({
+        'id': 'long-sub',
+        'title': 'Custom category row',
+        'category': 'other',
+        'subCategory': 'x' * (kMaxSubCategoryLength + 40),
+      })!;
+      expect(decoded.subCategory.length, kMaxSubCategoryLength);
+    });
+
+    test('sub-category whitespace is trimmed', () {
+      final decoded = ListingCodec.fromJsonMap({
+        'id': 'ws-sub',
+        'title': 'Whitespace row',
+        'subCategory': '  Kundan  ',
+      })!;
+      expect(decoded.subCategory, 'Kundan');
     });
   });
 }

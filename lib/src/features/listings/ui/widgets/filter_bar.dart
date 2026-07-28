@@ -19,38 +19,42 @@ class FilterBar extends ConsumerWidget {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: SegmentedButton<int>(
-            segments: const [
-              ButtonSegment(value: 0, label: Text('All')),
-              ButtonSegment(
-                value: 1,
-                label: Text('Offers'),
-                icon: Icon(Icons.volunteer_activism_outlined),
-              ),
-              ButtonSegment(
-                value: 2,
-                label: Text('Requests'),
-                icon: Icon(Icons.front_hand_outlined),
+          child: Row(
+            children: [
+              SegmentedButton<int>(
+                segments: const [
+                  ButtonSegment(value: 0, label: Text('All')),
+                  ButtonSegment(
+                    value: 1,
+                    label: Text('Offers'),
+                    icon: Icon(Icons.volunteer_activism_outlined),
+                  ),
+                  ButtonSegment(
+                    value: 2,
+                    label: Text('Requests'),
+                    icon: Icon(Icons.front_hand_outlined),
+                  ),
+                ],
+                selected: {
+                  switch (filter.type) {
+                    null => 0,
+                    ListingType.offer => 1,
+                    ListingType.request => 2,
+                  }
+                },
+                onSelectionChanged: (selection) => controller.setType(
+                  switch (selection.first) {
+                    1 => ListingType.offer,
+                    2 => ListingType.request,
+                    _ => null,
+                  },
+                ),
+                showSelectedIcon: false,
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.standard,
+                ),
               ),
             ],
-            selected: {
-              switch (filter.type) {
-                null => 0,
-                ListingType.offer => 1,
-                ListingType.request => 2,
-              }
-            },
-            onSelectionChanged: (selection) => controller.setType(
-              switch (selection.first) {
-                1 => ListingType.offer,
-                2 => ListingType.request,
-                _ => null,
-              },
-            ),
-            showSelectedIcon: false,
-            style: const ButtonStyle(
-              visualDensity: VisualDensity.standard,
-            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -60,6 +64,19 @@ class FilterBar extends ConsumerWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             children: [
+              // "Mine" replaces the old My-items destination: your rental book
+              // is one tap from the board instead of a screen away. It leads
+              // this row rather than trailing the type row, where the three
+              // segments already fill a phone's width.
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: FilterChip(
+                  label: const Text('Mine'),
+                  avatar: const Icon(Icons.person_outline, size: 18),
+                  selected: filter.mineOnly,
+                  onSelected: controller.setMineOnly,
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.only(right: 6),
                 child: ChoiceChip(
@@ -89,6 +106,38 @@ class FilterBar extends ConsumerWidget {
             ],
           ),
         ),
+        // Second level appears only once a category narrows the board —
+        // progressive disclosure keeps the default view calm.
+        if (filter.category != null &&
+            filter.category!.subCategories.isNotEmpty) ...[
+          SizedBox(
+            height: 44,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    label: Text('All ${filter.category!.label.toLowerCase()}'),
+                    selected: filter.subCategory == null,
+                    onSelected: (_) => controller.setSubCategory(null),
+                  ),
+                ),
+                for (final sub in filter.category!.subCategories)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(sub),
+                      selected: filter.subCategory == sub,
+                      onSelected: (selected) =>
+                          controller.setSubCategory(selected ? sub : null),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }

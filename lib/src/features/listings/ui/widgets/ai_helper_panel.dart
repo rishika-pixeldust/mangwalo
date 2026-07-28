@@ -14,11 +14,13 @@ class AiHelperPanel extends StatelessWidget {
     required this.engineInfo,
     required this.titleApplied,
     required this.categoryApplied,
+    required this.subCategoryApplied,
     required this.appliedTags,
     required this.durationApplied,
     required this.priceApplied,
     required this.onApplyTitle,
     required this.onApplyCategory,
+    required this.onApplySubCategory,
     required this.onToggleTag,
     required this.onApplyDuration,
     required this.onApplyPrice,
@@ -28,11 +30,13 @@ class AiHelperPanel extends StatelessWidget {
   final AiEngineInfo engineInfo;
   final bool titleApplied;
   final bool categoryApplied;
+  final bool subCategoryApplied;
   final Set<ConditionTag> appliedTags;
   final bool durationApplied;
   final bool priceApplied;
   final ValueChanged<String> onApplyTitle;
   final VoidCallback onApplyCategory;
+  final ValueChanged<String> onApplySubCategory;
   final ValueChanged<ConditionTag> onToggleTag;
   final VoidCallback onApplyDuration;
   final ValueChanged<int> onApplyPrice;
@@ -124,6 +128,15 @@ class AiHelperPanel extends StatelessWidget {
                           '${suggestion.suggestedCategory!.label}',
                       applied: categoryApplied,
                       onTap: onApplyCategory,
+                    ),
+                  if (suggestion.suggestedSubCategory != null)
+                    chip(
+                      text: suggestion.suggestedSubCategory!,
+                      semanticAction: 'Apply suggested sub-category: '
+                          '${suggestion.suggestedSubCategory!}',
+                      applied: subCategoryApplied,
+                      onTap: () =>
+                          onApplySubCategory(suggestion.suggestedSubCategory!),
                     ),
                   for (final tag in suggestion.conditionTags)
                     chip(

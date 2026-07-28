@@ -19,6 +19,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mangwalo/src/core/clock.dart';
+import 'package:mangwalo/src/core/constants.dart';
 import 'package:mangwalo/src/features/home/home_shell.dart';
 import 'package:mangwalo/src/features/listings/application/listing_providers.dart';
 import 'package:mangwalo/src/features/listings/data/in_memory_listing_repository.dart';
@@ -31,6 +32,8 @@ import 'package:mangwalo/src/features/onboarding/intro_screen.dart';
 import 'package:mangwalo/src/features/onboarding/onboarding_screen.dart';
 import 'package:mangwalo/src/features/settings/application/settings_controller.dart';
 import 'package:mangwalo/src/features/settings/data/hive_settings_repository.dart';
+import 'package:mangwalo/src/features/settings/ui/profile_screen.dart';
+import 'package:mangwalo/src/features/settings/ui/settings_screen.dart';
 import 'package:mangwalo/src/features/settings/domain/app_settings.dart';
 import 'package:mangwalo/src/theme/app_theme.dart';
 
@@ -83,6 +86,7 @@ Future<Listing> _mine() async => Listing(
           'gucci marmont shoulder bag, barely used, with dust bag. '
           'weekends only.',
       category: Category.designerBags,
+      subCategory: 'Shoulder bag',
       conditionTags: const ['Gently used'],
       area: 'Near Bandra Talao',
       neighborhood: 'Bandra West',
@@ -92,7 +96,10 @@ Future<Listing> _mine() async => Listing(
       dueDate: DateTime(2026, 7, 18),
       borrowerName: 'Priya',
       suggestedDurationDays: 7,
-      photos: [(await _filePhotoLoader('assets/seed/bag_lv.jpg')) ?? ''],
+      photos: [
+        for (final n in const ['bag_lv', 'bag_lv_2', 'bag_lv_3'])
+          (await _filePhotoLoader('assets/seed/$n.jpg')) ?? '',
+      ],
       reviews: [
         Review(
           rating: 5,
@@ -111,13 +118,15 @@ Widget _app(
   required InMemoryListingRepository repo,
   double textScale = 1.0,
   ThemeMode mode = ThemeMode.light,
+  bool tutorialSeen = true,
 }) {
   final settingsRepo = InMemorySettingsRepository();
-  settingsRepo.save(const AppSettings(
+  settingsRepo.save(AppSettings(
       neighborhood: 'Bandra West',
       displayName: 'Rishika',
       introSeen: true,
-      seedVersion: 1));
+      tutorialSeen: tutorialSeen,
+      seedVersion: AppConstants.seedVersion));
   return ProviderScope(
     overrides: [
       listingRepositoryProvider.overrideWithValue(repo),
@@ -216,7 +225,8 @@ void main() {
     frame(tester);
     await tester.pumpWidget(_app(const HomeShell(), repo: await board(tester)));
     await settle(tester);
-    await tester.tap(find.text('My items'));
+    // "My items" is a filter chip on the board now, not a nav destination.
+    await tester.tap(find.widgetWithText(FilterChip, 'Mine'));
     await settle(tester);
     await decodeImages(tester);
     await shoot(tester, '03_myitems');
@@ -252,6 +262,10 @@ void main() {
         const ListingDetailScreen(listingId: 'mine-1'),
         repo: await board(tester)));
     await settle(tester);
+    // Swipe the gallery to the second angle so the golden proves the
+    // multi-photo gallery (not just the cover) renders end to end.
+    await tester.drag(find.byType(PageView), const Offset(-600, 0));
+    await settle(tester);
     await decodeImages(tester);
     await shoot(tester, '06_detail_lending');
   });
@@ -267,12 +281,31 @@ void main() {
 
   testWidgets('08 settings', (tester) async {
     frame(tester);
-    await tester.pumpWidget(_app(const HomeShell(), repo: await board(tester)));
-    await settle(tester);
-    await tester.tap(find.text('Settings'));
+    // Settings is a pushed route from the avatar menu now, so render it
+    // directly rather than driving a bottom-nav tap that no longer exists.
+    await tester
+        .pumpWidget(_app(const SettingsScreen(), repo: await board(tester)));
     await settle(tester);
     await decodeImages(tester);
     await shoot(tester, '08_settings');
+  });
+
+  testWidgets('10 coach marks tour', (tester) async {
+    frame(tester);
+    await tester.pumpWidget(_app(const HomeShell(),
+        repo: await board(tester), tutorialSeen: false));
+    await settle(tester);
+    await decodeImages(tester);
+    await shoot(tester, '10_tutorial');
+  });
+
+  testWidgets('11 profile', (tester) async {
+    frame(tester);
+    await tester
+        .pumpWidget(_app(const ProfileScreen(), repo: await board(tester)));
+    await settle(tester);
+    await decodeImages(tester);
+    await shoot(tester, '11_profile');
   });
 
   testWidgets('09 board feed dark', (tester) async {

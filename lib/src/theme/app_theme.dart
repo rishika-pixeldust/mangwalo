@@ -1,5 +1,42 @@
 import 'package:flutter/material.dart';
 
+import 'dark_variant.dart';
+
+/// One dark palette. Light is a single fixed identity; dark is a choice,
+/// because comfort in the dark depends on the room, the panel, and the eye.
+@immutable
+class _Night {
+  const _Night({
+    required this.canvas,
+    required this.surface,
+    required this.surfaceAlt,
+    required this.surfaceLowest,
+    required this.surfaceHighest,
+    required this.ink,
+    required this.inkSoft,
+    required this.accent,
+    required this.onAccent,
+    required this.accentSoft,
+    required this.onAccentSoft,
+    required this.outline,
+    required this.outlineVariant,
+  });
+
+  final Color canvas;
+  final Color surface;
+  final Color surfaceAlt;
+  final Color surfaceLowest;
+  final Color surfaceHighest;
+  final Color ink;
+  final Color inkSoft;
+  final Color accent;
+  final Color onAccent;
+  final Color accentSoft;
+  final Color onAccentSoft;
+  final Color outline;
+  final Color outlineVariant;
+}
+
 /// "Velvet Ledger" design system: the luxury evolution of Warm Ledger.
 /// Ivory canvas, near-white cards with 28px radii, oxblood/burgundy as the
 /// single accent with blush containers, wine-black "night" tone for the
@@ -15,38 +52,88 @@ abstract final class AppTheme {
   static const _accent = Color(0xFF7E2231); // oxblood
   static const _accentSoft = Color(0xFFF7DCDE); // blush
   static const _onAccentSoft = Color(0xFF56141F);
-  static const _night = Color(0xFF26141A);
+  static const _nightInk = Color(0xFF26141A);
   static const _onNight = Color(0xFFF7EFEA);
 
-  // Dark tokens
-  static const _canvasD = Color(0xFF17100D);
-  static const _surfaceD = Color(0xFF221715);
-  static const _surfaceAltD = Color(0xFF2E1F1D);
-  static const _inkD = Color(0xFFF4EAE6);
-  static const _inkSoftD = Color(0xFFAD9599);
-  static const _accentD = Color(0xFFE8A0AB); // blush-rose reads on dark
-  static const _accentSoftD = Color(0xFF4A222B);
-  static const _onAccentSoftD = Color(0xFFFFD9DE);
+  /// Default dark. Surfaces sit well clear of black and the rose is
+  /// deliberately desaturated: a saturated accent on a near-black ground is
+  /// what made the first attempt tiring to read.
+  static const _warmCharcoal = _Night(
+    canvas: Color(0xFF1A1618),
+    surface: Color(0xFF242022),
+    surfaceAlt: Color(0xFF302B2E),
+    surfaceLowest: Color(0xFF131011),
+    surfaceHighest: Color(0xFF3A3437),
+    ink: Color(0xFFE9E3E5),
+    inkSoft: Color(0xFFAEA5A9),
+    accent: Color(0xFFD8AAB2),
+    onAccent: Color(0xFF3A1C22),
+    accentSoft: Color(0xFF3D2E33),
+    onAccentSoft: Color(0xFFF3DCE0),
+    outline: Color(0xFF7C7276),
+    outlineVariant: Color(0xFF413A3D),
+  );
+
+  /// The original Luxe night — deeper and browner, more dramatic.
+  static const _wineNoir = _Night(
+    canvas: Color(0xFF17100D),
+    surface: Color(0xFF221715),
+    surfaceAlt: Color(0xFF2E1F1D),
+    surfaceLowest: Color(0xFF100B09),
+    surfaceHighest: Color(0xFF382622),
+    ink: Color(0xFFF4EAE6),
+    inkSoft: Color(0xFFAD9599),
+    accent: Color(0xFFE8A0AB),
+    onAccent: Color(0xFF3F0F18),
+    accentSoft: Color(0xFF4A222B),
+    onAccentSoft: Color(0xFFFFD9DE),
+    outline: Color(0xFF6E5C58),
+    outlineVariant: Color(0xFF3E2C28),
+  );
+
+  /// OLED: true black ground, with cards lifted just enough to read as cards.
+  static const _trueBlack = _Night(
+    canvas: Color(0xFF000000),
+    surface: Color(0xFF0E0C0D),
+    surfaceAlt: Color(0xFF1A1719),
+    surfaceLowest: Color(0xFF000000),
+    surfaceHighest: Color(0xFF241F21),
+    ink: Color(0xFFEDE7E9),
+    inkSoft: Color(0xFFA9A1A4),
+    accent: Color(0xFFE0B0B8),
+    onAccent: Color(0xFF33161C),
+    accentSoft: Color(0xFF2B2124),
+    onAccentSoft: Color(0xFFF5E1E5),
+    outline: Color(0xFF7A7275),
+    outlineVariant: Color(0xFF302A2C),
+  );
+
+  static _Night _night(DarkVariant v) => switch (v) {
+        DarkVariant.warmCharcoal => _warmCharcoal,
+        DarkVariant.wineNoir => _wineNoir,
+        DarkVariant.trueBlack => _trueBlack,
+      };
 
   static const serif = 'PlayfairDisplay';
   static const sans = 'PlusJakartaSans';
 
-  static ThemeData light() => _base(Brightness.light);
-  static ThemeData dark() => _base(Brightness.dark);
+  static ThemeData light() => _base(Brightness.light, DarkVariant.warmCharcoal);
+  static ThemeData dark([DarkVariant variant = DarkVariant.warmCharcoal]) =>
+      _base(Brightness.dark, variant);
 
-  static ColorScheme _scheme(Brightness b) {
+  static ColorScheme _scheme(Brightness b, DarkVariant variant) {
     final isLight = b == Brightness.light;
+    final n = _night(variant);
     return ColorScheme(
       brightness: b,
-      primary: isLight ? _accent : _accentD,
-      onPrimary: isLight ? Colors.white : const Color(0xFF3F0F18),
-      primaryContainer: isLight ? _accentSoft : _accentSoftD,
-      onPrimaryContainer: isLight ? _onAccentSoft : _onAccentSoftD,
-      secondary: isLight ? const Color(0xFF6E5257) : const Color(0xFFD8BEC2),
+      primary: isLight ? _accent : n.accent,
+      onPrimary: isLight ? Colors.white : n.onAccent,
+      primaryContainer: isLight ? _accentSoft : n.accentSoft,
+      onPrimaryContainer: isLight ? _onAccentSoft : n.onAccentSoft,
+      secondary: isLight ? const Color(0xFF6E5257) : const Color(0xFFD5C2C6),
       onSecondary: isLight ? Colors.white : const Color(0xFF2A181B),
-      secondaryContainer: isLight ? _surfaceAlt : _surfaceAltD,
-      onSecondaryContainer:
-          isLight ? const Color(0xFF4A363B) : const Color(0xFFE8D6D2),
+      secondaryContainer: isLight ? _surfaceAlt : n.surfaceAlt,
+      onSecondaryContainer: isLight ? const Color(0xFF4A363B) : n.ink,
       // Warn/gold family (privacy warnings) — champagne against the wine.
       tertiary: isLight ? const Color(0xFF7A5C00) : const Color(0xFFE9C96B),
       onTertiary: isLight ? Colors.white : const Color(0xFF3A2E06),
@@ -60,29 +147,29 @@ abstract final class AppTheme {
           isLight ? const Color(0xFFF9DEDC) : const Color(0xFF4A1F1C),
       onErrorContainer:
           isLight ? const Color(0xFF7A1A14) : const Color(0xFFF9DEDC),
-      surface: isLight ? _surface : _surfaceD,
-      onSurface: isLight ? _ink : _inkD,
-      onSurfaceVariant: isLight ? _inkSoft : _inkSoftD,
+      surface: isLight ? _surface : n.surface,
+      onSurface: isLight ? _ink : n.ink,
+      onSurfaceVariant: isLight ? _inkSoft : n.inkSoft,
       surfaceContainerLowest:
-          isLight ? const Color(0xFFDDD2CB) : const Color(0xFF100B09),
-      surfaceContainerLow: isLight ? _canvas : _canvasD,
-      surfaceContainer: isLight ? _surface : _surfaceD,
-      surfaceContainerHigh: isLight ? _surfaceAlt : _surfaceAltD,
+          isLight ? const Color(0xFFDDD2CB) : n.surfaceLowest,
+      surfaceContainerLow: isLight ? _canvas : n.canvas,
+      surfaceContainer: isLight ? _surface : n.surface,
+      surfaceContainerHigh: isLight ? _surfaceAlt : n.surfaceAlt,
       surfaceContainerHighest:
-          isLight ? const Color(0xFFEADBD3) : const Color(0xFF382622),
-      outline: isLight ? const Color(0xFFBCA8A4) : const Color(0xFF6E5C58),
-      outlineVariant:
-          isLight ? const Color(0xFFE6D6CF) : const Color(0xFF3E2C28),
-      inverseSurface: isLight ? _night : _onNight,
-      onInverseSurface: isLight ? _onNight : _night,
-      inversePrimary: isLight ? _accentD : _accent,
+          isLight ? const Color(0xFFEADBD3) : n.surfaceHighest,
+      outline: isLight ? const Color(0xFFBCA8A4) : n.outline,
+      outlineVariant: isLight ? const Color(0xFFE6D6CF) : n.outlineVariant,
+      // On dark, the "night CTA" trick inverts: a light pill on dark ground.
+      inverseSurface: isLight ? _nightInk : n.ink,
+      onInverseSurface: isLight ? _onNight : n.canvas,
+      inversePrimary: isLight ? _warmCharcoal.accent : _accent,
       shadow: const Color(0xFF2A171C),
       scrim: Colors.black,
     );
   }
 
-  static ThemeData _base(Brightness brightness) {
-    final scheme = _scheme(brightness);
+  static ThemeData _base(Brightness brightness, DarkVariant variant) {
+    final scheme = _scheme(brightness, variant);
     final isLight = brightness == Brightness.light;
 
     final baseText = ThemeData(brightness: brightness).textTheme.apply(

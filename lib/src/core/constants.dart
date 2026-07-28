@@ -22,5 +22,12 @@ abstract final class AppConstants {
   /// Version stamped into every persisted listing for tolerant migration.
   // v2: the luxury-rental pivot — pricing, deposits, multi-photo galleries,
   // reviews, and the new catalog categories.
-  static const schemaVersion = 2;
+  /// v3: sub-categories added, `contactChannel`/`contactNote` retired.
+  static const schemaVersion = 3;
+
+  /// Bumped whenever the sample set itself changes. Sample ids are
+  /// deterministic ('sample-N'), so re-seeding overwrites the old rows in
+  /// place — existing users pick up refreshed samples with no duplicates.
+  /// v2: sub-categories, multi-photo galleries, contact fields gone.
+  static const seedVersion = 2;
 }

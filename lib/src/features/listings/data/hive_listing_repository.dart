@@ -76,8 +76,8 @@ class HiveListingRepository implements ListingRepository {
         description: sanitize(l.description,
             maxLength: Validators.descriptionMax, multiline: true),
         area: sanitize(l.area, maxLength: Validators.areaMax),
-        contactNote:
-            sanitize(l.contactNote, maxLength: Validators.contactNoteMax),
+        subCategory:
+            sanitize(l.subCategory, maxLength: kMaxSubCategoryLength),
       );
 
   List<Listing> _decodeAll() =>

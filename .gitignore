@@ -44,12 +44,14 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Env / secrets — none should ever exist in this project, belt and braces
+# Env / secrets — real values never get committed, belt and braces
 *.env
 .env*
 *.pem
 *.key
 secrets.*
+# ...but the placeholder template must ship so the repo is runnable.
+!.env.example
 
 # Local agent tooling
 .claude/

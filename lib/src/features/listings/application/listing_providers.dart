@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/clock.dart';
 import '../../ai/local_ai_service.dart';
 import '../../ai/rule_based_listing_ai.dart';
+import '../../settings/application/settings_controller.dart';
+import '../domain/feed_filter.dart';
 import '../domain/listing.dart';
 import '../data/listing_repository.dart';
 import 'feed_filter_controller.dart';
@@ -26,11 +28,26 @@ final listingsProvider = StreamProvider<List<Listing>>(
   (ref) => ref.watch(listingRepositoryProvider).watchAll(),
 );
 
+/// The filter actually applied to the board: the user's filter-bar choices,
+/// plus the two scoping rules that live in Settings rather than the filter bar
+/// (active locality and whether samples are hidden).
+///
+/// Composing them here is what makes switching locality refresh the board —
+/// this provider watches settings, so a new locality produces a new filter.
+final effectiveFeedFilterProvider = Provider<FeedFilter>((ref) {
+  final chosen = ref.watch(feedFilterProvider);
+  final settings = ref.watch(settingsProvider);
+  return chosen.copyWith(
+    neighborhood: settings.showAllLocalities ? null : settings.neighborhood,
+    hideSamples: settings.hideSamples,
+  );
+});
+
 /// Feed pipeline: repository stream + filter, filtered and sorted by the pure
 /// FeedFilter.apply (overdue first, then due-soonest, then latest update).
 final filteredListingsProvider = Provider<AsyncValue<List<Listing>>>((ref) {
   final listings = ref.watch(listingsProvider);
-  final filter = ref.watch(feedFilterProvider);
+  final filter = ref.watch(effectiveFeedFilterProvider);
   final now = ref.watch(nowProvider);
   return listings.whenData((list) => filter.apply(list, now()));
 });

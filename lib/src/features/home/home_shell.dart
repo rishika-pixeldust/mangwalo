@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/widgets/night_nav_bar.dart';
-import '../listings/application/feed_filter_controller.dart';
 import '../listings/ui/feed_screen.dart';
 import '../listings/ui/listing_form_screen.dart';
-import '../settings/ui/settings_screen.dart';
+import '../onboarding/coach_marks.dart';
+import '../settings/application/settings_controller.dart';
 
-/// Root navigation: Noticeboard / My items / Settings as destinations in the
-/// dark docked bar, with the orange center square for "New listing".
+/// The board is the app. Profile and Settings live in the app-bar avatar menu
+/// and "Mine" is a filter chip on the board itself, so there is nothing left
+/// to navigate between — the "+" is the only global action.
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
 
@@ -17,51 +17,38 @@ class HomeShell extends ConsumerStatefulWidget {
 }
 
 class _HomeShellState extends ConsumerState<HomeShell> {
-  int _index = 0;
-
-  void _select(int index) {
-    setState(() => _index = index);
-    if (index == 0 || index == 1) {
-      ref.read(feedFilterProvider.notifier).setMineOnly(index == 1);
-    }
+  @override
+  void initState() {
+    super.initState();
+    // Migration for anyone upgrading: loadSamples is a no-op unless the
+    // stored seedVersion is behind, in which case the refreshed sample set
+    // overwrites the old rows in place (ids are deterministic).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(settingsProvider.notifier).loadSamples();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final tutorialSeen = ref.watch(settingsProvider).tutorialSeen;
+
     return Scaffold(
-      body: switch (_index) {
-        2 => const SettingsScreen(),
-        _ => const FeedScreen(),
-      },
-      floatingActionButton: NightCenterAction(
-        icon: Icons.add,
-        label: 'New listing',
+      body: Stack(
+        children: [
+          const FeedScreen(),
+          // First visit, or a replay from the avatar menu: teach on the real
+          // board rather than explaining it before the user has seen it.
+          if (!tutorialSeen) const CoachMarksOverlay(),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const ListingFormScreen()),
         ),
-      ),
-      // Half in the bar, half floating: FAB center rides the slab's top edge.
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: NightNavBar(
-        destinations: const [
-          NightNavDestination(
-            icon: Icons.storefront_outlined,
-            selectedIcon: Icons.storefront,
-            label: 'Board',
-          ),
-          NightNavDestination(
-            icon: Icons.person_outline,
-            selectedIcon: Icons.person,
-            label: 'My items',
-          ),
-          NightNavDestination(
-            icon: Icons.settings_outlined,
-            selectedIcon: Icons.settings,
-            label: 'Settings',
-          ),
-        ],
-        selectedIndex: _index,
-        onDestinationSelected: _select,
+        icon: const Icon(Icons.add),
+        label: const Text('New listing'),
+        tooltip: 'Post a listing',
       ),
     );
   }

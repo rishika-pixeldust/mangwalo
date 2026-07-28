@@ -41,10 +41,12 @@ class RuleBasedListingAi implements LocalAiService {
             KeywordRules.defaultLoanDuration)
         : KeywordRules.defaultLoanDuration;
     final price = _suggestPrice(category, padded);
+    final subCategory = _scoreSubCategory(category, tokens, padded);
 
     return ListingSuggestion(
       suggestedTitle: title,
       suggestedCategory: category,
+      suggestedSubCategory: subCategory,
       conditionTags: tags,
       suggestedLoanDuration: duration,
       suggestedPricePerDayInr: price,
@@ -55,6 +57,39 @@ class RuleBasedListingAi implements LocalAiService {
         _ => SuggestionConfidence.high,
       },
     );
+  }
+
+  /// Best sub-category WITHIN the winning category, or null when nothing
+  /// matches. Same phrase=3/word=1 scoring as categories, and ties resolve to
+  /// declaration order so the result is deterministic.
+  ///
+  /// Scoped to the winning category on purpose: "clutch" should never pull a
+  /// jewellery listing into a bag sub-category.
+  String? _scoreSubCategory(
+      Category? category, List<String> tokens, String padded) {
+    if (category == null) return null;
+    final table = KeywordRules.subCategoryKeywords[category];
+    if (table == null) return null;
+
+    final unigrams = <String>{
+      for (final t in tokens) ...[t, _singular(t)],
+    };
+
+    String? best;
+    var bestScore = 0;
+    for (final entry in table.entries) {
+      var score = 0;
+      for (final keyword in entry.value) {
+        if (_entryMatches(keyword, unigrams, padded)) {
+          score += keyword.contains(' ') ? 3 : 1;
+        }
+      }
+      if (score > bestScore) {
+        best = entry.key;
+        bestScore = score;
+      }
+    }
+    return best;
   }
 
   /// Category base rate, doubled when a premium brand appears anywhere in

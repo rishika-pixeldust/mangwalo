@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants.dart';
-import '../../core/security/pin.dart';
 import '../../core/validation/sanitizer.dart';
 import '../settings/application/settings_controller.dart';
-import 'pin_gate_screen.dart';
 
-/// First launch: pick your neighborhood (single-neighborhood scope) and
-/// optionally start with clearly-marked sample listings.
+/// First launch: pick the locality whose board you want, and give a first
+/// name for your listings. No account here — signing in is prompted later,
+/// only when an action needs an identity.
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -20,32 +19,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String? _selected;
   bool _saving = false;
   final _nameController = TextEditingController();
-  final _pinController = TextEditingController();
-  String? _pinError;
 
   @override
   void dispose() {
     _nameController.dispose();
-    _pinController.dispose();
     super.dispose();
   }
 
   Future<void> _start() async {
     final neighborhood = _selected;
     if (neighborhood == null) return;
-    final pin = _pinController.text.trim();
-    if (pin.isNotEmpty && !PinLock.isValidPin(pin)) {
-      setState(() => _pinError = 'PIN must be 4–6 digits.');
-      return;
-    }
     setState(() => _saving = true);
-    // Setting a PIN during setup shouldn't immediately gate the user —
-    // the lock applies from the NEXT launch.
-    ref.read(appUnlockedProvider.notifier).unlock();
     await ref.read(settingsProvider.notifier).completeOnboarding(
           neighborhood,
           displayName: sanitize(_nameController.text, maxLength: 30),
-          pin: pin.isEmpty ? null : pin,
         );
     // RootGate swaps to the feed once settings update; nothing to pop.
   }
@@ -95,31 +82,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 counterText: '',
               ),
             ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _pinController,
-              maxLength: 6,
-              obscureText: true,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'App PIN (optional)',
-                hintText: '4–6 digits',
-                counterText: '',
-                helperText: 'Locks MangWalo on this device. Only a salted '
-                    'hash is stored.',
-                helperMaxLines: 2,
-                errorText: _pinError,
-              ),
-              onChanged: (_) {
-                if (_pinError != null) setState(() => _pinError = null);
-              },
-            ),
             const SizedBox(height: 20),
-            Text('Pick your neighborhood', style: theme.textTheme.titleMedium),
+            Text('Pick your locality', style: theme.textTheme.titleMedium),
             const SizedBox(height: 4),
             Text(
-              'MangWalo is one noticeboard per neighborhood. Everything you '
-              'add stays on this device.',
+              'MangWalo is one noticeboard per locality — you can switch it '
+              'any time, or browse every locality at once.',
               style: theme.textTheme.bodySmall
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
@@ -147,7 +115,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 Expanded(
                   child: Text(
                     'We\'ll add a few clearly-marked sample listings so the '
-                    'board isn\'t lonely — remove them anytime in Settings.',
+                    'board isn\'t lonely — hide them anytime in Settings.',
                     style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant),
                   ),

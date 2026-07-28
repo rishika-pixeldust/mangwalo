@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
-import '../../../core/security/pin.dart';
 import '../../../core/validation/sanitizer.dart';
+import '../../../theme/dark_variant.dart';
 import '../../listings/application/listing_providers.dart';
 import '../application/settings_controller.dart';
 
@@ -36,78 +36,6 @@ Future<String?> _promptText(BuildContext context,
   );
 }
 
-/// Set / change / remove the app PIN. Changing requires the current PIN.
-Future<void> _managePin(BuildContext context, WidgetRef ref) async {
-  final controller = ref.read(settingsProvider.notifier);
-  final hasPin = ref.read(settingsProvider).pinEnabled;
-  final current = TextEditingController();
-  final next = TextEditingController();
-
-  final action = await showDialog<String>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(hasPin ? 'Change app PIN' : 'Set app PIN'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (hasPin)
-            TextField(
-              controller: current,
-              obscureText: true,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              decoration: const InputDecoration(
-                  labelText: 'Current PIN', counterText: ''),
-            ),
-          TextField(
-            controller: next,
-            obscureText: true,
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            decoration: const InputDecoration(
-                labelText: 'New PIN (4–6 digits)',
-                helperText: 'Leave empty to remove the lock.',
-                counterText: ''),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop('save'),
-          child: const Text('Save'),
-        ),
-      ],
-    ),
-  );
-  if (action != 'save') return;
-  if (hasPin && !controller.verifyPin(current.text.trim())) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Current PIN didn\'t match — nothing changed.')));
-    }
-    return;
-  }
-  final newPin = next.text.trim();
-  if (newPin.isEmpty) {
-    await controller.removePin();
-  } else if (PinLock.isValidPin(newPin)) {
-    await controller.setPin(newPin);
-  } else {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('PIN must be 4–6 digits — nothing changed.')));
-    }
-    return;
-  }
-  if (context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(newPin.isEmpty ? 'App lock removed' : 'App lock set')));
-  }
-}
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -184,28 +112,8 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
           ),
-          const SizedBox(height: 8),
-          Card(
-            margin: EdgeInsets.zero,
-            child: ListTile(
-              leading: Icon(
-                settings.pinEnabled ? Icons.lock : Icons.lock_open_outlined,
-                color: theme.colorScheme.primary,
-              ),
-              title: Text(settings.pinEnabled
-                  ? 'App lock is on'
-                  : 'Set an app PIN'),
-              subtitle: Text(settings.pinEnabled
-                  ? 'MangWalo asks for your PIN on launch. Tap to change '
-                      'or remove.'
-                  : '4–6 digits; locks the app on this device. Only a '
-                      'salted hash is stored.'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _managePin(context, ref),
-            ),
-          ),
           const SizedBox(height: 24),
-          Text('Neighborhood', style: theme.textTheme.titleSmall),
+          Text('Locality', style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             initialValue: settings.neighborhood,
@@ -217,11 +125,21 @@ class SettingsScreen extends ConsumerWidget {
               if (value != null) controller.changeNeighborhood(value);
             },
             decoration: const InputDecoration(
-              helperText: 'Your noticeboard shows one neighborhood at a time.',
+              helperText: 'The board shows this locality. Switching takes '
+                  'effect immediately.',
               helperMaxLines: 2,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: settings.showAllLocalities,
+            onChanged: controller.setShowAllLocalities,
+            title: const Text('Show all localities'),
+            subtitle: const Text('Browse every locality at once instead of '
+                'just yours.'),
+          ),
+          const SizedBox(height: 16),
           Text('Appearance', style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           SingleChildScrollView(
@@ -246,38 +164,41 @@ class SettingsScreen extends ConsumerWidget {
                   controller.setThemeMode(selection.first),
             ),
           ),
-          const SizedBox(height: 24),
+          // Only meaningful when dark can actually appear.
+          if (settings.themeMode != ThemeMode.light) ...[
+            const SizedBox(height: 12),
+            Text('Dark style', style: theme.textTheme.labelLarge),
+            const SizedBox(height: 4),
+            RadioGroup<DarkVariant>(
+              groupValue: settings.darkVariant,
+              onChanged: (v) {
+                if (v != null) controller.setDarkVariant(v);
+              },
+              child: Column(
+                children: [
+                  for (final variant in DarkVariant.values)
+                    RadioListTile<DarkVariant>(
+                      contentPadding: EdgeInsets.zero,
+                      value: variant,
+                      title: Text(variant.label),
+                      subtitle: Text(variant.description),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
           Text('Sample data', style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
-          if (settings.seedVersion == 0)
-            FilledButton.tonalIcon(
-              icon: const Icon(Icons.science_outlined),
-              label: const Text('Load sample listings'),
-              style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48)),
-              onPressed: () async {
-                await controller.loadSamples();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Sample listings loaded')));
-                }
-              },
-            )
-          else
-            OutlinedButton.icon(
-              icon: const Icon(Icons.delete_sweep_outlined),
-              label: const Text('Remove sample listings'),
-              style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48)),
-              onPressed: () async {
-                await controller.removeSamples();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Sample listings removed — your own '
-                          'listings are untouched')));
-                }
-              },
-            ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: settings.hideSamples,
+            onChanged: controller.setHideSamples,
+            title: const Text('Hide sample listings'),
+            subtitle: const Text('Samples are shared illustrative data — '
+                'hiding them leaves only real listings. Your own are never '
+                'affected.'),
+          ),
           const SizedBox(height: 24),
           Text('Your data', style: theme.textTheme.titleSmall),
           const SizedBox(height: 4),

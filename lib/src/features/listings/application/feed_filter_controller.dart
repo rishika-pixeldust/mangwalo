@@ -9,8 +9,12 @@ class FeedFilterController extends Notifier<FeedFilter> {
 
   void setType(ListingType? type) => state = state.copyWith(type: type);
 
+  /// Changing category clears any sub-category picked under the previous one.
   void setCategory(Category? category) =>
-      state = state.copyWith(category: category);
+      state = state.copyWith(category: category, subCategory: null);
+
+  void setSubCategory(String? subCategory) =>
+      state = state.copyWith(subCategory: subCategory);
 
   void setQuery(String query) => state = state.copyWith(query: query);
 

@@ -180,6 +180,79 @@ abstract final class KeywordRules {
     Category.accessories: 600,
   };
 
+  /// Keywords that pin a listing to a SUB-category, keyed by the exact label
+  /// used in [kSubCategories] so a match can be applied to the form directly.
+  ///
+  /// Only consulted once a category has won, so the same word can safely mean
+  /// different things in different categories ("clutch" is a bag sub-category
+  /// and never a jewellery one).
+  static const subCategoryKeywords =
+      <Category, Map<String, List<String>>>{
+    Category.designerBags: {
+      'Tote': ['tote', 'neverfull', 'shopper', 'work bag'],
+      'Shoulder bag': ['shoulder bag', 'flap bag', 'classic flap', 'hobo',
+          'baguette', 'marmont'],
+      'Clutch': ['clutch', 'minaudiere', 'envelope bag'],
+      'Potli': ['potli', 'batua', 'drawstring bag'],
+      'Sling': ['sling', 'crossbody', 'cross body', 'belt bag'],
+      'Backpack': ['backpack', 'rucksack', 'bagpack'],
+      'Duffle': ['duffle', 'duffel', 'weekender', 'keepall'],
+    },
+    Category.eventWear: {
+      'Lehenga': ['lehenga', 'lehnga', 'ghagra', 'chaniya choli'],
+      'Saree': ['saree', 'sari', 'kanjeevaram', 'kanjivaram', 'banarasi'],
+      'Sherwani': ['sherwani', 'achkan'],
+      'Bandhgala': ['bandhgala', 'jodhpuri', 'bandh gala'],
+      'Gown': ['gown', 'ball gown', 'evening gown', 'trail gown'],
+      'Anarkali': ['anarkali', 'salwar', 'sharara', 'gharara'],
+      'Suit': ['tuxedo', 'tux', 'three piece', 'dinner suit'],
+    },
+    Category.partyWear: {
+      'Cocktail dress': ['cocktail dress', 'cocktail', 'bodycon'],
+      'Shimmer dress': ['shimmer', 'sequin', 'sequinned', 'glitter dress',
+          'metallic dress'],
+      'Jumpsuit': ['jumpsuit', 'playsuit', 'romper'],
+      'Blazer': ['blazer', 'dinner jacket'],
+      'Co-ord set': ['co ord', 'coord set', 'crop set', 'two piece'],
+    },
+    Category.sportsKits: {
+      'Cricket': ['cricket', 'bat', 'pads', 'wicket', 'kashmir willow',
+          'batting gloves'],
+      'Golf': ['golf', 'clubs', 'driver', 'putter', 'half set', 'caddy'],
+      'Tennis': ['tennis', 'racquet', 'racket'],
+      'Badminton': ['badminton', 'shuttle', 'shuttlecock'],
+      'Football': ['football', 'soccer', 'studs', 'shin guards'],
+      'Cycling': ['cycle', 'cycling', 'bicycle', 'helmet and cycle'],
+      'Skating': ['skates', 'skating', 'rollerblades', 'skateboard'],
+    },
+    Category.jewellery: {
+      'Kundan': ['kundan'],
+      'Polki': ['polki'],
+      'Temple': ['temple jewellery', 'temple set', 'nakshi'],
+      'Diamond': ['diamond', 'solitaire', 'american diamond', 'cz'],
+      'Pearl': ['pearl', 'moti'],
+      'Jhumkas': ['jhumka', 'jhumkas', 'chandbali', 'chand bali'],
+      'Maang tikka': ['maang tikka', 'matha patti', 'tikka', 'nath'],
+    },
+    Category.watches: {
+      'Automatic': ['automatic', 'self winding', 'seamaster', 'submariner'],
+      'Chronograph': ['chronograph', 'chrono', 'speedmaster'],
+      'Dress watch': ['dress watch', 'leather strap watch', 'slim watch'],
+      'Smart watch': ['smart watch', 'smartwatch', 'apple watch', 'fitbit'],
+    },
+    Category.accessories: {
+      'Clutch': ['clutch', 'minaudiere', 'envelope bag'],
+      'Potli': ['potli', 'batua', 'drawstring bag'],
+      'Stole': ['stole', 'dupatta', 'scarf'],
+      'Pashmina': ['pashmina', 'cashmere', 'shawl'],
+      'Heels': ['heels', 'stiletto', 'pumps', 'juttis', 'kolhapuri'],
+      'Sunglasses': ['sunglasses', 'shades', 'goggles'],
+      'Belt': ['belt', 'kamarbandh', 'waist chain'],
+      'Turban': ['turban', 'safa', 'pagdi', 'saafa'],
+      'Brooch': ['brooch', 'kalgi', 'lapel pin'],
+    },
+  };
+
   static const stopwords = <String>{
     'the', 'a', 'an', 'hai', 'ka', 'ki', 'ke', 'for', 'my', 'hi', 'hello',
     'i', 'need', 'want', 'have', 'and', 'or', 'to', 'of', 'in', 'on',

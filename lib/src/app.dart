@@ -6,7 +6,6 @@ import 'core/widgets/phone_frame.dart';
 import 'features/home/home_shell.dart';
 import 'features/onboarding/intro_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
-import 'features/onboarding/pin_gate_screen.dart';
 import 'features/settings/application/settings_controller.dart';
 import 'theme/app_theme.dart';
 
@@ -20,19 +19,19 @@ class MangWaloApp extends ConsumerWidget {
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+      darkTheme: AppTheme.dark(settings.darkVariant),
       themeMode: settings.themeMode,
       // The frame wraps the Navigator, so every screen and dialog stays
       // phone-sized on desktop browsers.
       builder: (context, child) =>
           PhoneFrame(child: child ?? const SizedBox.shrink()),
+      // Concept intro → pick a locality → straight to the board. Signing in
+      // is prompted later, only when an action actually needs an identity.
       home: !settings.introSeen
           ? const IntroScreen()
           : !settings.onboardingDone
               ? const OnboardingScreen()
-              : (settings.pinEnabled && !ref.watch(appUnlockedProvider))
-                  ? const PinGateScreen()
-                  : const HomeShell(),
+              : const HomeShell(),
     );
   }
 }

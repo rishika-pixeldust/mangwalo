@@ -1,3 +1,4 @@
+import '../../features/listings/domain/listing.dart';
 import 'privacy_scanner.dart';
 import 'sanitizer.dart';
 
@@ -18,7 +19,6 @@ abstract final class Validators {
   static const descriptionMax = 500;
   static const areaMin = 3;
   static const areaMax = 60;
-  static const contactNoteMax = 120;
 
   static final _hasLetter = RegExp(r'[a-zA-Z]');
 
@@ -89,10 +89,11 @@ abstract final class Validators {
     return null;
   }
 
-  static String? contactNote(String? value) {
+  /// Free-text sub-category, only reachable when the category is "Others".
+  static String? subCategory(String? value) {
     final v = sanitize(value ?? '');
-    if (v.length > contactNoteMax) {
-      return 'Keep the note under $contactNoteMax characters.';
+    if (v.length > kMaxSubCategoryLength) {
+      return 'Keep it under $kMaxSubCategoryLength characters.';
     }
     return null;
   }

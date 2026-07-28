@@ -33,13 +33,13 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _areaController = TextEditingController();
-  final _contactNoteController = TextEditingController();
+  final _subCategoryController = TextEditingController();
   final _priceController = TextEditingController();
   final _depositController = TextEditingController();
 
   ListingType _type = ListingType.offer;
   Category? _category;
-  ContactChannel _contactChannel = ContactChannel.societyBoard;
+  String _subCategory = '';
   final Set<String> _conditionTags = {};
   int? _suggestedDurationDays;
   final List<String> _photos = [];
@@ -57,7 +57,7 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
         _existing = existing;
         _type = existing.type;
         _category = existing.category;
-        _contactChannel = existing.contactChannel;
+        _subCategory = existing.subCategory;
         _conditionTags.addAll(existing.conditionTags);
         _suggestedDurationDays = existing.suggestedDurationDays;
         _photos.addAll(existing.photos);
@@ -66,7 +66,7 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
         _depositController.text = existing.depositInr?.toString() ?? '';
         _descriptionController.text = existing.description;
         _areaController.text = existing.area;
-        _contactNoteController.text = existing.contactNote;
+        _subCategoryController.text = existing.subCategory;
         // Prefilled text gets the same privacy screening as typed text.
         _warnings = _scanFreeText();
       }
@@ -82,7 +82,7 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
     _titleController.dispose();
     _descriptionController.dispose();
     _areaController.dispose();
-    _contactNoteController.dispose();
+    _subCategoryController.dispose();
     _priceController.dispose();
     _depositController.dispose();
     super.dispose();
@@ -118,9 +118,12 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
     final description = sanitize(_descriptionController.text,
         maxLength: Validators.descriptionMax, multiline: true);
     final area = sanitize(_areaController.text, maxLength: Validators.areaMax);
-    final contactNote = sanitize(_contactNoteController.text,
-        maxLength: Validators.contactNoteMax);
-    final category = _category ?? Category.accessories;
+    final category = _category ?? Category.other;
+    // "Others" takes a typed label; the preset categories take a picked one.
+    final subCategory = category.takesCustomSubCategory
+        ? sanitize(_subCategoryController.text,
+            maxLength: kMaxSubCategoryLength)
+        : _subCategory;
     final tags = _conditionTags.toList()..sort();
     final price =
         int.parse(sanitize(_priceController.text).replaceAll(',', ''));
@@ -134,10 +137,9 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
             title: title,
             description: description,
             category: category,
+            subCategory: subCategory,
             conditionTags: tags,
             area: area,
-            contactChannel: _contactChannel,
-            contactNote: contactNote,
             pricePerDayInr: price,
             depositInr: deposit,
             suggestedDurationDays: _suggestedDurationDays,
@@ -150,11 +152,10 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
             title: title,
             description: description,
             category: category,
+            subCategory: subCategory,
             conditionTags: tags,
             area: area,
             neighborhood: neighborhood,
-            contactChannel: _contactChannel,
-            contactNote: contactNote,
             pricePerDayInr: price,
             depositInr: deposit,
             suggestedDurationDays: _suggestedDurationDays,
@@ -203,31 +204,54 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text('What kind of listing?', style: theme.textTheme.titleSmall),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SegmentedButton<ListingType>(
-                segments: const [
-                  ButtonSegment(
-                    value: ListingType.offer,
-                    label: Text('Rent out'),
-                    icon: Icon(Icons.volunteer_activism_outlined),
+            // The type is fixed once posted: a "Rent out" listing carries
+            // rental state and reviews that make no sense on a request, so
+            // editing shows what it is rather than offering to switch it.
+            if (_existing == null) ...[
+              Text('What kind of listing?', style: theme.textTheme.titleSmall),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SegmentedButton<ListingType>(
+                  segments: const [
+                    ButtonSegment(
+                      value: ListingType.offer,
+                      label: Text('Rent out'),
+                      icon: Icon(Icons.volunteer_activism_outlined),
+                    ),
+                    ButtonSegment(
+                      value: ListingType.request,
+                      label: Text('Looking for'),
+                      icon: Icon(Icons.front_hand_outlined),
+                    ),
+                  ],
+                  selected: {_type},
+                  onSelectionChanged: (selection) {
+                    setState(() => _type = selection.first);
+                    // Re-run suggestions: title phrasing depends on the type.
+                    _onDescriptionChanged(_descriptionController.text);
+                  },
+                ),
+              ),
+            ] else
+              Row(
+                children: [
+                  Icon(
+                    _type == ListingType.offer
+                        ? Icons.volunteer_activism_outlined
+                        : Icons.front_hand_outlined,
+                    size: 18,
+                    color: theme.colorScheme.primary,
                   ),
-                  ButtonSegment(
-                    value: ListingType.request,
-                    label: Text('Looking for'),
-                    icon: Icon(Icons.front_hand_outlined),
+                  const SizedBox(width: 8),
+                  Text(
+                    _type == ListingType.offer
+                        ? 'Renting this out'
+                        : 'Looking for this',
+                    style: theme.textTheme.titleSmall,
                   ),
                 ],
-                selected: {_type},
-                onSelectionChanged: (selection) {
-                  setState(() => _type = selection.first);
-                  // Re-run suggestions: title phrasing depends on the type.
-                  _onDescriptionChanged(_descriptionController.text);
-                },
               ),
-            ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
@@ -288,6 +312,8 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
                   _titleController.text == suggestion.suggestedTitle,
               categoryApplied: _category != null &&
                   _category == suggestion.suggestedCategory,
+              subCategoryApplied: _subCategory.isNotEmpty &&
+                  _subCategory == suggestion.suggestedSubCategory,
               appliedTags: {
                 for (final tag in suggestion.conditionTags)
                   if (_conditionTags.contains(tag.label)) tag,
@@ -301,8 +327,17 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
                   setState(() => _priceController.text = price.toString()),
               onApplyTitle: (title) =>
                   setState(() => _titleController.text = title),
-              onApplyCategory: () => setState(
-                  () => _category = suggestion.suggestedCategory),
+              // Applying a category clears any stale sub-category; applying a
+              // sub-category also sets its parent, so one tap is enough.
+              onApplyCategory: () => setState(() {
+                _category = suggestion.suggestedCategory;
+                _subCategory = '';
+                _subCategoryController.clear();
+              }),
+              onApplySubCategory: (sub) => setState(() {
+                _category ??= suggestion.suggestedCategory;
+                _subCategory = sub;
+              }),
               onToggleTag: (tag) => setState(() {
                 if (!_conditionTags.remove(tag.label)) {
                   _conditionTags.add(tag.label);
@@ -337,8 +372,45 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
               ],
               validator: (value) =>
                   value == null ? 'Pick a category.' : null,
-              onChanged: (value) => setState(() => _category = value),
+              // Switching category invalidates any sub-category picked under
+              // the old one, so clear it rather than keep a nonsense pair.
+              onChanged: (value) => setState(() {
+                _category = value;
+                _subCategory = '';
+                _subCategoryController.clear();
+              }),
             ),
+            // Second level: picked from a preset list, or typed when the
+            // category is "Others". Optional either way.
+            if (_category != null) ...[
+              const SizedBox(height: 12),
+              if (_category!.takesCustomSubCategory)
+                TextFormField(
+                  controller: _subCategoryController,
+                  maxLength: kMaxSubCategoryLength,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(
+                    labelText: 'What kind of item? (optional)',
+                    hintText: 'e.g. Telescope, Drone, Camera lens',
+                    counterText: '',
+                    helperText: 'Helps neighbours find it in search.',
+                  ),
+                )
+              else
+                DropdownButtonFormField<String>(
+                  key: ValueKey('sub-${_category!.name}-$_subCategory'),
+                  initialValue: _subCategory.isEmpty ? null : _subCategory,
+                  decoration: const InputDecoration(
+                    labelText: 'Sub-category (optional)',
+                  ),
+                  items: [
+                    for (final s in _category!.subCategories)
+                      DropdownMenuItem(value: s, child: Text(s)),
+                  ],
+                  onChanged: (value) =>
+                      setState(() => _subCategory = value ?? ''),
+                ),
+            ],
             const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,28 +456,6 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
                 helperText: 'Landmark only — never an exact address. '
                     'Exact locations stay private.',
                 helperMaxLines: 2,
-              ),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<ContactChannel>(
-              initialValue: _contactChannel,
-              decoration: const InputDecoration(labelText: 'Contact via'),
-              items: [
-                for (final c in ContactChannel.values)
-                  DropdownMenuItem(value: c, child: Text(c.label)),
-              ],
-              onChanged: (value) => setState(
-                  () => _contactChannel = value ?? _contactChannel),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _contactNoteController,
-              validator: Validators.contactNote,
-              maxLength: Validators.contactNoteMax,
-              decoration: const InputDecoration(
-                labelText: 'Contact note (optional)',
-                hintText: 'e.g. Evenings only, ask for the Sharmas',
-                helperText: 'Stored only on this device.',
               ),
             ),
             const SizedBox(height: 16),

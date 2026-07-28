@@ -107,5 +107,68 @@ void main() {
       expect(s.suggestedCategory, Category.watches);
       expect(s.confidence, SuggestionConfidence.low); // one entry, 1 point
     });
+
+    group('sub-category suggestions', () {
+      test('picks the sub-category within the winning category', () async {
+        final s = await engine.suggest(const AiSuggestionInput(
+            description: 'kundan necklace set with chandbali earrings'));
+        expect(s.suggestedCategory, Category.jewellery);
+        expect(s.suggestedSubCategory, 'Kundan');
+      });
+
+      test('Hinglish sub-category terms resolve', () async {
+        final s = await engine.suggest(const AiSuggestionInput(
+            description: 'sabyasachi lehenga, worn once, dry cleaned'));
+        expect(s.suggestedCategory, Category.eventWear);
+        expect(s.suggestedSubCategory, 'Lehenga');
+      });
+
+      test('same word means different things per category', () async {
+        // "clutch" is an accessories sub-category here (see kSubCategories)
+        // and must never leak into jewellery.
+        final clutch = await engine.suggest(const AiSuggestionInput(
+            description: 'satin clutch for a wedding reception'));
+        expect(clutch.suggestedCategory, Category.accessories);
+        expect(clutch.suggestedSubCategory, 'Clutch');
+
+        final jewels = await engine.suggest(const AiSuggestionInput(
+            description: 'polki jhumka pair, handled with care'));
+        expect(jewels.suggestedCategory, Category.jewellery);
+        expect(jewels.suggestedSubCategory, anyOf('Polki', 'Jhumkas'));
+      });
+
+      test('suggested sub-category is always valid for its category',
+          () async {
+        for (final text in [
+          'chanel classic flap bag',
+          'sg cricket bat and pads',
+          'omega seamaster automatic watch',
+          'ivory pashmina shawl',
+          'emerald sequin gown for a gala',
+        ]) {
+          final s = await engine.suggest(AiSuggestionInput(description: text));
+          if (s.suggestedSubCategory != null) {
+            expect(s.suggestedCategory!.subCategories,
+                contains(s.suggestedSubCategory),
+                reason: 'invented sub-category for: $text');
+          }
+        }
+      });
+
+      test('no sub-category match yields null, not a guess', () async {
+        final s = await engine.suggest(const AiSuggestionInput(
+            description: 'some completely unremarkable object here'));
+        expect(s.suggestedSubCategory, isNull);
+      });
+
+      test('sub-category suggestion is deterministic', () async {
+        const input = AiSuggestionInput(
+            description: 'louis vuitton neverfull tote, barely used');
+        final a = await engine.suggest(input);
+        final b = await engine.suggest(input);
+        expect(a.suggestedSubCategory, b.suggestedSubCategory);
+        expect(a, b);
+      });
+    });
   });
 }

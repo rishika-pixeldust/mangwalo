@@ -18,14 +18,20 @@ synced) and **stale personal data** accumulating on a shared device.
 | Oversized / malformed input | Paste bombs, control characters | Length-capped validators + `sanitize()` (trim, collapse whitespace, strip control chars) applied in the form layer **and again in the repository** — defense in depth | `sanitizer.dart`, `hive_listing_repository.dart` |
 | Corrupted stored rows | Schema drift, partial writes | Versioned, tolerant JSON codec: missing keys get defaults, undecodable rows are skipped (never crash the feed), invariant violations are repaired on load | `listing_codec.dart` |
 | Stale personal data on device | Shared/family device | **Reset all local data** (confirm dialog) wipes listings, settings, and in-memory filter state, returning to onboarding; sample data removable separately | `settings_controller.dart` |
-| Casual snooping on a shared device | Household/shared phone | Optional app PIN (4–6 digits) gates the UI at launch; only a salted SHA-256 hash is stored, never the PIN; honest recovery = full local reset (no server, no reset emails). Not at-rest encryption — documented. | `core/security/pin.dart`, `pin_gate_screen.dart` |
 | Over-collection of borrower identity | Lending flow | Borrower field is a single optional **first name only** (30 chars), stored locally, cleared automatically on return | `lend_out_dialog.dart`, `listing.dart` |
+| Contact details leaking into listings | Free-text "contact note" | **The field no longer exists.** The contact-channel picker and its free-text note were removed outright — the note was the field most likely to carry a phone number, and in-app messaging replaces both. Legacy values are dropped on read, never migrated | `listing_codec.dart` (v3), `listing_form_screen.dart` |
+| Free-text sub-category abuse | "Others" category label | Capped at 30 chars and sanitised in the form **and again** in the codec and repository | `validators.dart`, `listing_codec.dart`, `hive_listing_repository.dart` |
 | Photo metadata leakage | Item photos | Photos are decoded and re-encoded as JPEG on-device (EXIF — including GPS — is stripped by re-encoding), downscaled, and never leave local storage | `core/images.dart` |
 | Secret leakage in the repo | API keys, tokens | None exist — the app makes no network calls. `.gitignore` blocks `*.env`, `*.pem`, `*.key` belt-and-braces. `grep -riE "api_key|secret|password" lib/` returns nothing | repo-wide |
 | Sample data mistaken for real people | Demo listings | Every sample row is flagged `isDemo`, badged "Sample" in the UI, uses initials + common surnames, and contains **no digits** in contact fields | `seed_data.dart` |
 
 ## What we deliberately do NOT protect against
 
+- **Casual snooping on a shared device** — there is no app lock. An optional
+  4–6 digit PIN (salted SHA-256) existed and was **removed**: it guarded a
+  device, not an account, and once real authentication lands it would have been
+  a second, weaker credential to explain and maintain. A shared-device user
+  should use the browser profile / OS lock instead.
 - **Device theft / local forensics** — data is not encrypted at rest; IndexedDB is
   readable by anyone with the unlocked device or browser profile. Acceptable for a
   noticeboard whose content is semi-public by nature; noted as future work

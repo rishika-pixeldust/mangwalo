@@ -12,11 +12,10 @@ abstract final class ListingCodec {
         'title': l.title,
         'description': l.description,
         'category': l.category.name,
+        'subCategory': l.subCategory,
         'conditionTags': l.conditionTags,
         'area': l.area,
         'neighborhood': l.neighborhood,
-        'contactChannel': l.contactChannel.name,
-        'contactNote': l.contactNote,
         'pricePerDayInr': l.pricePerDayInr,
         'depositInr': l.depositInr,
         'status': l.status.name,
@@ -70,19 +69,20 @@ abstract final class ListingCodec {
             ListingType.values, map['type'] as String?, ListingType.offer),
         title: title,
         description: map['description'] as String? ?? '',
-        // Unknown/legacy categories (v1 rows) land in Accessories rather
-        // than being dropped.
+        // Unknown/legacy categories (v1 rows) land in Others rather than
+        // being dropped or silently mislabelled as Accessories.
         category: _enumByName(
-            Category.values, map['category'] as String?, Category.accessories),
+            Category.values, map['category'] as String?, Category.other),
+        subCategory: _decodeSubCategory(map['subCategory']),
         conditionTags: (map['conditionTags'] as List<dynamic>?)
                 ?.whereType<String>()
                 .toList() ??
             const <String>[],
         area: map['area'] as String? ?? '',
         neighborhood: map['neighborhood'] as String? ?? '',
-        contactChannel: _enumByName(ContactChannel.values,
-            map['contactChannel'] as String?, ContactChannel.societyBoard),
-        contactNote: map['contactNote'] as String? ?? '',
+        // v1/v2 `contactChannel` and `contactNote` are intentionally NOT read:
+        // in-app messaging replaced them, so the values are dropped on the
+        // next write rather than migrated.
         pricePerDayInr: (map['pricePerDayInr'] as num?)?.toInt() ?? 0,
         depositInr: (map['depositInr'] as num?)?.toInt(),
         status: _enumByName(InteractionStatus.values, map['status'] as String?,
@@ -102,6 +102,16 @@ abstract final class ListingCodec {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Free-text sub-categories reach storage from user input, so cap the
+  /// length here too — the repository is the last line of defence.
+  static String _decodeSubCategory(Object? raw) {
+    if (raw is! String) return '';
+    final trimmed = raw.trim();
+    return trimmed.length <= kMaxSubCategoryLength
+        ? trimmed
+        : trimmed.substring(0, kMaxSubCategoryLength);
   }
 
   /// v2 stores a `photos` list; v1 rows carried a single `photoBase64`,

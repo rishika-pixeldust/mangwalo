@@ -10,6 +10,7 @@ import '../application/feed_filter_controller.dart';
 import '../application/listing_providers.dart';
 import 'listing_card.dart';
 import 'listing_detail_screen.dart';
+import 'widgets/board_actions.dart';
 import 'widgets/filter_bar.dart';
 
 class FeedScreen extends ConsumerWidget {
@@ -73,8 +74,10 @@ class FeedScreen extends ConsumerWidget {
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                '${settings.neighborhood ?? 'Your neighborhood'}'
-                                ' · maang lo, luxury nearby',
+                                settings.showAllLocalities
+                                    ? 'All localities · maang lo'
+                                    : '${settings.neighborhood ?? 'Your locality'}'
+                                        ' · maang lo, luxury nearby',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                     color:
                                         theme.colorScheme.onSurfaceVariant),
@@ -86,10 +89,7 @@ class FeedScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  _SquareIconBadge(
-                    icon: Icons.storefront_outlined,
-                    semanticLabel: 'MangWalo — ${settings.neighborhood ?? ''}',
-                  ),
+                  const BoardActions(),
                 ],
               ),
             ),
@@ -135,8 +135,8 @@ class FeedScreen extends ConsumerWidget {
                       return EmptyState(
                         icon: Icons.storefront_outlined,
                         title: 'Your noticeboard is waiting',
-                        message: 'Maang lo! Ask for what you need, or lend a '
-                            'hand — start with the orange button below.',
+                        message: 'Maang lo! Rent something out, or ask for '
+                            'what you need — start with the + button.',
                         actionLabel: settings.seedVersion == 0
                             ? 'Load sample listings'
                             : null,
@@ -145,6 +145,22 @@ class FeedScreen extends ConsumerWidget {
                                 .read(settingsProvider.notifier)
                                 .loadSamples()
                             : null,
+                      );
+                    }
+                    // Scoped to a locality that happens to be empty: never a
+                    // dead end — offer the wider board and posting.
+                    if (filter.isDefault &&
+                        !settings.showAllLocalities &&
+                        settings.neighborhood != null) {
+                      return EmptyState(
+                        icon: Icons.place_outlined,
+                        title: 'Nothing in ${settings.neighborhood} yet',
+                        message: 'No neighbour here has listed anything so '
+                            'far. Look wider, or be the first.',
+                        actionLabel: 'Show all localities',
+                        onAction: () => ref
+                            .read(settingsProvider.notifier)
+                            .setShowAllLocalities(true),
                       );
                     }
                     return EmptyState(
@@ -187,32 +203,6 @@ class FeedScreen extends ConsumerWidget {
 }
 
 /// 44px white rounded-square icon — the Warm Ledger top-bar accessory.
-class _SquareIconBadge extends StatelessWidget {
-  const _SquareIconBadge({required this.icon, required this.semanticLabel});
-
-  final IconData icon;
-  final String semanticLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Semantics(
-      label: semanticLabel,
-      child: ExcludeSemantics(
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: scheme.surface,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Icon(icon, size: 22, color: scheme.primary),
-        ),
-      ),
-    );
-  }
-}
-
 /// Hero stat card on the My-items view: big numeral + segmented meter,
 /// the Warm Ledger take on "1250 kcal · goal 2000".
 class _LendingHeroCard extends StatelessWidget {

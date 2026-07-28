@@ -48,6 +48,7 @@ class ListingSuggestion {
   const ListingSuggestion({
     this.suggestedTitle,
     this.suggestedCategory,
+    this.suggestedSubCategory,
     this.conditionTags = const <ConditionTag>[],
     this.suggestedLoanDuration,
     this.suggestedPricePerDayInr,
@@ -58,6 +59,10 @@ class ListingSuggestion {
 
   final String? suggestedTitle;
   final Category? suggestedCategory;
+
+  /// Second-level guess, always a member of [suggestedCategory]'s own
+  /// sub-category list — never a free-text invention.
+  final String? suggestedSubCategory;
 
   /// Deduped, in enum declaration order.
   final List<ConditionTag> conditionTags;
@@ -71,6 +76,7 @@ class ListingSuggestion {
   bool get isEmpty =>
       suggestedTitle == null &&
       suggestedCategory == null &&
+      suggestedSubCategory == null &&
       conditionTags.isEmpty &&
       suggestedLoanDuration == null &&
       suggestedPricePerDayInr == null;
@@ -80,6 +86,7 @@ class ListingSuggestion {
       other is ListingSuggestion &&
       other.suggestedTitle == suggestedTitle &&
       other.suggestedCategory == suggestedCategory &&
+      other.suggestedSubCategory == suggestedSubCategory &&
       listEquals(other.conditionTags, conditionTags) &&
       other.suggestedLoanDuration == suggestedLoanDuration &&
       other.suggestedPricePerDayInr == suggestedPricePerDayInr &&
@@ -87,8 +94,8 @@ class ListingSuggestion {
 
   @override
   int get hashCode => Object.hash(suggestedTitle, suggestedCategory,
-      Object.hashAll(conditionTags), suggestedLoanDuration,
-      suggestedPricePerDayInr, confidence);
+      suggestedSubCategory, Object.hashAll(conditionTags),
+      suggestedLoanDuration, suggestedPricePerDayInr, confidence);
 }
 
 /// Drives the in-app transparency disclosure — swapping the implementation

@@ -11,7 +11,8 @@ extension ListingTypeLabel on ListingType {
 }
 
 /// The luxury rental catalog: bags, occasion wear, and sports kits — plus
-/// the pieces that complete a look.
+/// the pieces that complete a look. [Category.other] is the escape hatch so
+/// nothing a neighbour owns is unpostable.
 enum Category {
   designerBags,
   eventWear,
@@ -20,6 +21,7 @@ enum Category {
   jewellery,
   watches,
   accessories,
+  other,
 }
 
 extension CategoryLabel on Category {
@@ -31,8 +33,50 @@ extension CategoryLabel on Category {
         Category.jewellery => 'Jewellery',
         Category.watches => 'Watches',
         Category.accessories => 'Accessories',
+        Category.other => 'Others',
       };
+
+  /// Second-level options offered for this category. Empty for
+  /// [Category.other], which takes a short free-text label instead.
+  List<String> get subCategories => kSubCategories[this] ?? const [];
+
+  /// True when the sub-category is typed by the user rather than picked.
+  bool get takesCustomSubCategory => this == Category.other;
 }
+
+/// Predefined sub-categories, ordered most-common-first so the dropdown's
+/// top entries are the likely answers. Kept in the domain (not the UI) so the
+/// AI engine, the filter bar, and the form all agree on one list.
+const Map<Category, List<String>> kSubCategories = {
+  Category.designerBags: [
+    'Tote', 'Shoulder bag', 'Clutch', 'Potli', 'Sling', 'Backpack', 'Duffle',
+  ],
+  Category.eventWear: [
+    'Lehenga', 'Saree', 'Sherwani', 'Bandhgala', 'Gown', 'Anarkali', 'Suit',
+  ],
+  Category.partyWear: [
+    'Cocktail dress', 'Shimmer dress', 'Jumpsuit', 'Blazer', 'Co-ord set',
+  ],
+  Category.sportsKits: [
+    'Cricket', 'Golf', 'Tennis', 'Badminton', 'Football', 'Cycling', 'Skating',
+  ],
+  Category.jewellery: [
+    'Kundan', 'Polki', 'Temple', 'Diamond', 'Pearl', 'Jhumkas', 'Maang tikka',
+  ],
+  Category.watches: [
+    'Automatic', 'Chronograph', 'Dress watch', 'Smart watch',
+  ],
+  // Clutches and potlis live here, not under Designer bags: the category
+  // dictionary reads them as occasion accessories, and the sample board
+  // ("Velvet potli & clutch duo") is filed that way too.
+  Category.accessories: [
+    'Clutch', 'Potli', 'Stole', 'Pashmina', 'Heels', 'Sunglasses', 'Belt',
+    'Turban', 'Brooch',
+  ],
+};
+
+/// Free-text sub-category cap (only reachable via [Category.other]).
+const int kMaxSubCategoryLength = 30;
 
 /// Homework-mandated conversation lifecycle: saved → contacted → closed.
 enum InteractionStatus { saved, contacted, closed }
@@ -53,17 +97,6 @@ extension LendingStateLabel on LendingState {
         LendingState.available => 'Available',
         LendingState.lentOut => 'Rented out',
         LendingState.returned => 'Returned',
-      };
-}
-
-/// Privacy-first contact options: no free-text phone numbers required.
-enum ContactChannel { inPerson, societyBoard, buildingWhatsApp }
-
-extension ContactChannelLabel on ContactChannel {
-  String get label => switch (this) {
-        ContactChannel.inPerson => 'In person',
-        ContactChannel.societyBoard => 'Society notice board',
-        ContactChannel.buildingWhatsApp => 'Building WhatsApp group',
       };
 }
 
@@ -109,11 +142,10 @@ class Listing {
     required this.title,
     required this.description,
     required this.category,
+    this.subCategory = '',
     this.conditionTags = const <String>[],
     required this.area,
     required this.neighborhood,
-    this.contactChannel = ContactChannel.societyBoard,
-    this.contactNote = '',
     required this.pricePerDayInr,
     this.depositInr,
     this.status = InteractionStatus.saved,
@@ -138,16 +170,15 @@ class Listing {
   final String title;
   final String description;
   final Category category;
+
+  /// Optional second level: a value from [Category.subCategories], or a short
+  /// free-text label when the category is [Category.other]. Empty = unset.
+  final String subCategory;
   final List<String> conditionTags;
 
   /// Landmark-level location only — never an exact address.
   final String area;
   final String neighborhood;
-  final ContactChannel contactChannel;
-
-  /// Optional note ("evenings only", "ring flat via intercom"). Stored only
-  /// on this device.
-  final String contactNote;
 
   /// Rental rate in whole rupees per day — bold on every card.
   final int pricePerDayInr;
@@ -184,6 +215,10 @@ class Listing {
 
   String? get coverPhoto => photos.isEmpty ? null : photos.first;
 
+  /// "Jewellery · Kundan", falling back to the bare category when unset.
+  String get categoryLabel =>
+      subCategory.isEmpty ? category.label : '${category.label} · $subCategory';
+
   /// Average star rating across reviews, or null when unreviewed.
   double? get averageRating => reviews.isEmpty
       ? null
@@ -194,11 +229,10 @@ class Listing {
     String? title,
     String? description,
     Category? category,
+    String? subCategory,
     List<String>? conditionTags,
     String? area,
     String? neighborhood,
-    ContactChannel? contactChannel,
-    String? contactNote,
     int? pricePerDayInr,
     Object? depositInr = _unset,
     InteractionStatus? status,
@@ -217,11 +251,10 @@ class Listing {
       title: title ?? this.title,
       description: description ?? this.description,
       category: category ?? this.category,
+      subCategory: subCategory ?? this.subCategory,
       conditionTags: conditionTags ?? this.conditionTags,
       area: area ?? this.area,
       neighborhood: neighborhood ?? this.neighborhood,
-      contactChannel: contactChannel ?? this.contactChannel,
-      contactNote: contactNote ?? this.contactNote,
       pricePerDayInr: pricePerDayInr ?? this.pricePerDayInr,
       depositInr:
           identical(depositInr, _unset) ? this.depositInr : depositInr as int?,
@@ -282,11 +315,10 @@ class Listing {
         other.title == title &&
         other.description == description &&
         other.category == category &&
+        other.subCategory == subCategory &&
         listEquals(other.conditionTags, conditionTags) &&
         other.area == area &&
         other.neighborhood == neighborhood &&
-        other.contactChannel == contactChannel &&
-        other.contactNote == contactNote &&
         other.pricePerDayInr == pricePerDayInr &&
         other.depositInr == depositInr &&
         other.status == status &&

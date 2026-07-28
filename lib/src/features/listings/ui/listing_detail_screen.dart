@@ -226,17 +226,10 @@ class ListingDetailScreen extends ConsumerWidget {
             Column(
               children: [
                 infoRow(listing.category.icon, 'Category',
-                    listing.category.label),
+                    listing.categoryLabel),
                 infoRow(Icons.place_outlined, 'Landmark', listing.area),
-                infoRow(Icons.location_city_outlined, 'Neighborhood',
+                infoRow(Icons.location_city_outlined, 'Locality',
                     listing.neighborhood),
-                infoRow(
-                    Icons.forum_outlined,
-                    'Contact',
-                    listing.contactNote.isEmpty
-                        ? listing.contactChannel.label
-                        : '${listing.contactChannel.label} · '
-                            '${listing.contactNote}'),
                 infoRow(Icons.event_outlined, 'Posted',
                     dateFormat.format(listing.createdAt)),
                 if (listing.borrowerName.isNotEmpty)

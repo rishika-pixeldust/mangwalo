@@ -14,6 +14,7 @@ extension CategoryIcon on Category {
         Category.jewellery => Icons.diamond_outlined,
         Category.watches => Icons.watch_outlined,
         Category.accessories => Icons.style_outlined,
+        Category.other => Icons.category_outlined,
       };
 }
 
