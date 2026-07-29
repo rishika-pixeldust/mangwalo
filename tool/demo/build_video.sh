@@ -13,7 +13,12 @@ cd "$(dirname "$0")"
 #
 #   MANGWALO_VOICE="Rishi (Enhanced)" ./tool/demo/build_video.sh
 #
-VOICE="${MANGWALO_VOICE:-Rishi}"
+# Default is Tara (en-IN, female) — an Indian English voice to match the
+# Hinglish in the script. The only Siri-engine voice installed here is Aman,
+# which sounds markedly more human but is male; if a male read is acceptable,
+# MANGWALO_VOICE="Aman (English (India))" is the most natural option available.
+#
+VOICE="${MANGWALO_VOICE:-Tara}"
 # Slower than conversational: narration over slides needs room to land, and
 # the compact voices in particular read badly when rushed.
 RATE="${MANGWALO_RATE:-152}"
