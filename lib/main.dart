@@ -7,9 +7,11 @@ import 'src/app.dart';
 import 'src/core/config/app_config.dart';
 import 'src/core/constants.dart';
 import 'src/features/listings/application/listing_providers.dart';
+import 'src/features/listings/data/cached_synced_listing_repository.dart';
 import 'src/features/listings/data/hive_listing_repository.dart';
 import 'src/features/listings/data/in_memory_listing_repository.dart';
 import 'src/features/listings/data/listing_repository.dart';
+import 'src/features/listings/data/supabase_listing_source.dart';
 import 'src/features/settings/application/settings_controller.dart';
 import 'src/features/settings/data/hive_settings_repository.dart';
 import 'src/features/settings/data/settings_repository.dart';
@@ -49,6 +51,34 @@ Future<void> main() async {
       );
       backendReady = true;
     } catch (_) {
+      backendReady = false;
+    }
+  }
+
+  if (backendReady) {
+    final client = Supabase.instance.client;
+
+    // Give the app an identity before the first frame, without asking anything
+    // of the user. Anonymous is a real auth.users row with a working
+    // auth.uid(), so RLS and every foreign key behave exactly as they will
+    // once a stronger provider is added — nothing downstream changes.
+    if (client.auth.currentSession == null) {
+      try {
+        await client.auth.signInAnonymously();
+      } catch (_) {
+        // Provider disabled or offline: fall through to the local board rather
+        // than blocking behind an error screen.
+      }
+    }
+
+    // Only now swap the seam. Hive stays the read path — the board paints from
+    // cache and works offline — while the remote handles writes and refresh.
+    if (client.auth.currentSession != null) {
+      listingRepository = CachedSyncedListingRepository(
+        cache: listingRepository,
+        remote: SupabaseListingSource(client),
+      );
+    } else {
       backendReady = false;
     }
   }

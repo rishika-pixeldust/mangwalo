@@ -132,15 +132,18 @@ class FeedScreen extends ConsumerWidget {
                     }
                     final nothingAtAll = (all.value ?? []).isEmpty;
                     if (nothingAtAll) {
+                      // On the shared noticeboard samples are server-side
+                      // reference data, so there is nothing for a client to
+                      // load — offering the button would be a dead control.
+                      final canSeed = !ref.watch(backendReadyProvider) &&
+                          settings.seedVersion == 0;
                       return EmptyState(
                         icon: Icons.storefront_outlined,
                         title: 'Your noticeboard is waiting',
                         message: 'Maang lo! Rent something out, or ask for '
                             'what you need — start with the + button.',
-                        actionLabel: settings.seedVersion == 0
-                            ? 'Load sample listings'
-                            : null,
-                        onAction: settings.seedVersion == 0
+                        actionLabel: canSeed ? 'Load sample listings' : null,
+                        onAction: canSeed
                             ? () => ref
                                 .read(settingsProvider.notifier)
                                 .loadSamples()

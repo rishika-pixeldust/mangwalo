@@ -74,9 +74,19 @@ class SettingsController extends Notifier<AppSettings> {
   Future<void> setDarkVariant(DarkVariant variant) =>
       _update(state.copyWith(darkVariant: variant));
 
+  /// Seeds the local sample board.
+  ///
   /// Idempotent: the in-flight guard stops double-taps racing the await, and
   /// sample ids are deterministic so a second putAll could only overwrite.
+  ///
+  /// Skipped entirely once the shared noticeboard is configured. Writes go
+  /// through the synced repository there, so seeding locally would upload 15
+  /// sample listings owned by whoever happened to open the app — and then
+  /// again for the next visitor. Samples are ONE shared server-side set
+  /// (see docs/product-roadmap.md), seeded once by an operator, never by a
+  /// client.
   Future<void> loadSamples() async {
+    if (ref.read(backendReadyProvider)) return;
     if (_seeding || state.seedVersion >= AppConstants.seedVersion) return;
     final neighborhood = state.neighborhood;
     if (neighborhood == null) return;
