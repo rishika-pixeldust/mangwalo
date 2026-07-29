@@ -15,6 +15,7 @@ import '../../settings/application/settings_controller.dart';
 import '../application/listing_providers.dart';
 import '../application/listing_suggestion_controller.dart';
 import '../domain/listing.dart';
+import '../../../core/widgets/listing_photo.dart';
 import 'widgets/ai_helper_panel.dart';
 
 /// Create/edit form. The on-device helper suggests, the user decides:
@@ -478,12 +479,11 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
                               'Photo ${i + 1} of ${_photos.length}'
                               '${i == 0 ? ' — cover' : ''}',
                           image: true,
-                          child: Image.memory(
-                            base64Decode(_photos[i]),
+                          child: ListingPhoto(
+                            photo: _photos[i],
                             width: 96,
                             height: 96,
                             fit: BoxFit.cover,
-                            gaplessPlayback: true,
                           ),
                         ),
                       ),

@@ -9,6 +9,7 @@ import '../../../core/widgets/status_badge.dart';
 import '../domain/due_info.dart';
 import '../domain/listing.dart';
 import '../../../theme/night_tokens.dart';
+import '../../../core/widgets/listing_photo.dart';
 
 /// Feed card, Velvet Ledger style: cover photo with a price pill when the
 /// listing has imagery, serif title, star rating, and state badges. The
@@ -135,12 +136,11 @@ class ListingCard extends StatelessWidget {
                 if (cover != null)
                   Stack(
                     children: [
-                      Image.memory(
-                        base64Decode(cover),
+                      ListingPhoto(
+                        photo: cover,
                         height: 172,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        gaplessPlayback: true,
                       ),
                       Positioned(left: 12, bottom: 12, child: _pricePill(context)),
                       if (listing.photos.length > 1)

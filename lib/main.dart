@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'src/app.dart';
+import 'src/core/config/app_config.dart';
 import 'src/core/constants.dart';
 import 'src/features/listings/application/listing_providers.dart';
 import 'src/features/listings/data/hive_listing_repository.dart';
@@ -34,12 +36,30 @@ Future<void> main() async {
     settingsRepository = InMemorySettingsRepository();
   }
 
+  // The shared noticeboard is opt-in at build time: with no credentials the
+  // app stays entirely local, which keeps `flutter run` useful for anyone who
+  // clones the repo. A failure to reach Supabase must also degrade to local
+  // rather than block the board behind an error screen.
+  var backendReady = false;
+  if (AppConfig.hasBackend) {
+    try {
+      await Supabase.initialize(
+        url: AppConfig.supabaseUrl,
+        publishableKey: AppConfig.supabasePublishableKey,
+      );
+      backendReady = true;
+    } catch (_) {
+      backendReady = false;
+    }
+  }
+
   runApp(
     ProviderScope(
       overrides: [
         listingRepositoryProvider.overrideWithValue(listingRepository),
         settingsRepositoryProvider.overrideWithValue(settingsRepository),
         storageAvailableProvider.overrideWithValue(storageAvailable),
+        backendReadyProvider.overrideWithValue(backendReady),
       ],
       child: const MangWaloApp(),
     ),

@@ -110,14 +110,29 @@ shadow_paste(c, p1, (1000, 110))
 shadow_paste(c, p2, (1450, 110))
 save(c, "s0_intro")
 
+# S0b — how it works (the in-app tour + your profile)
+c = base_canvas()
+d = ImageDraw.Draw(c)
+text_column(d, "HOW IT WORKS", ["Learn it on", "the real board."], [
+    "Five-step tour on first visit — replayable anytime",
+    "Board scoped to your locality; browse all in a tap",
+    "Search, filter by category, then by sub-category",
+    "Your profile: your reviews, your loans out",
+])
+p1 = phone_card(f"{GOLD}/10_tutorial.png", 860)
+p2 = phone_card(f"{GOLD}/11_profile.png", 860)
+shadow_paste(c, p1, (1000, 110))
+shadow_paste(c, p2, (1450, 110))
+save(c, "s0b_tour")
+
 # S1 — product thinking
 c = base_canvas()
 d = ImageDraw.Draw(c)
 text_column(d, "01 · PRODUCT THINKING", ["Luxury, priced", "and reviewed."], [
     "Bold ₹/day rate on every nearby listing",
+    "One noticeboard per locality — switching re-scopes it",
     "Star reviews — the item AND the person",
     "Return-date tracking — overdue jumps the queue",
-    "My-items rental book with renter names",
 ])
 p1 = phone_card(f"{GOLD}/03_myitems.png", 860)
 p2 = phone_card(f"{GOLD}/06_detail_lending.png", 860)
@@ -133,6 +148,7 @@ text_column(d, "02 · ACCESSIBILITY", ["Usable by every", "neighbor."], [
     "Errors are icon + text, never color-only",
     "48-pixel touch targets everywhere",
     "Survives 200% text scaling",
+    "Three dark palettes, all WCAG AA verified",
 ])
 p1 = phone_card(f"{GOLD}/07_a11y_scale.png", 940)
 shadow_paste(c, p1, (1280, 70))
@@ -157,7 +173,8 @@ d = ImageDraw.Draw(c)
 text_column(d, "04 · SECURITY", ["Private by", "design."], [
     "Phone & address detection as you type",
     "Landmark-only locations, hard-enforced",
-    "Gallery photos re-encoded — EXIF & GPS stripped",
+    "Contact-note field removed — the likeliest leak, gone",
+    "Photos re-encoded on-device — EXIF & GPS stripped",
     "One-tap reset of all local data",
 ])
 p1 = phone_card(f"{GOLD}/05_privacy_warning.png", 940, crop=(0, 400, 1290, 1920))

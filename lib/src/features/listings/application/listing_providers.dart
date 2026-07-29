@@ -19,6 +19,11 @@ final listingRepositoryProvider = Provider<ListingRepository>(
 /// "changes won't persist" banner.
 final storageAvailableProvider = Provider<bool>((ref) => true);
 
+/// True once Supabase initialised successfully. False means local-only mode:
+/// everything on-device keeps working, and the social features say plainly
+/// that they need the shared noticeboard rather than failing mid-action.
+final backendReadyProvider = Provider<bool>((ref) => false);
+
 /// ADR-0001 change point: swap the rule engine for an on-device model here,
 /// in one line, without touching any call site.
 final localAiServiceProvider =

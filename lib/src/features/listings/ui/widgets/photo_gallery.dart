@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/listing_photo.dart';
 
 /// Swipeable photo preview for a listing: full-width pages with dot
 /// indicators. Each page announces "Photo N of M".
@@ -33,11 +34,10 @@ class _PhotoGalleryState extends State<PhotoGallery> {
                 label: 'Photo ${i + 1} of ${widget.photos.length} — '
                     '${widget.title}',
                 image: true,
-                child: Image.memory(
-                  base64Decode(widget.photos[i]),
+                child: ListingPhoto(
+                  photo: widget.photos[i],
                   fit: BoxFit.cover,
                   width: double.infinity,
-                  gaplessPlayback: true,
                 ),
               ),
             ),
