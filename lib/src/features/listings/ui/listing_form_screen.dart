@@ -41,6 +41,7 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
   ListingType _type = ListingType.offer;
   Category? _category;
   String _subCategory = '';
+  ContactChannel _contactChannel = ContactChannel.societyBoard;
   final Set<String> _conditionTags = {};
   int? _suggestedDurationDays;
   final List<String> _photos = [];
@@ -59,6 +60,7 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
         _type = existing.type;
         _category = existing.category;
         _subCategory = existing.subCategory;
+        _contactChannel = existing.contactChannel;
         _conditionTags.addAll(existing.conditionTags);
         _suggestedDurationDays = existing.suggestedDurationDays;
         _photos.addAll(existing.photos);
@@ -141,6 +143,7 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
             subCategory: subCategory,
             conditionTags: tags,
             area: area,
+            contactChannel: _contactChannel,
             pricePerDayInr: price,
             depositInr: deposit,
             suggestedDurationDays: _suggestedDurationDays,
@@ -157,6 +160,7 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
             conditionTags: tags,
             area: area,
             neighborhood: neighborhood,
+            contactChannel: _contactChannel,
             pricePerDayInr: price,
             depositInr: deposit,
             suggestedDurationDays: _suggestedDurationDays,
@@ -458,6 +462,23 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
                     'Exact locations stay private.',
                 helperMaxLines: 2,
               ),
+            ),
+            const SizedBox(height: 12),
+            // A preference, not a phone number: the options are a closed set,
+            // so this field can never carry contact details.
+            DropdownButtonFormField<ContactChannel>(
+              initialValue: _contactChannel,
+              decoration: const InputDecoration(
+                labelText: 'How should neighbours reach you?',
+                helperText: 'No phone numbers — pick how you prefer to meet.',
+                helperMaxLines: 2,
+              ),
+              items: [
+                for (final c in ContactChannel.values)
+                  DropdownMenuItem(value: c, child: Text(c.label)),
+              ],
+              onChanged: (v) =>
+                  setState(() => _contactChannel = v ?? _contactChannel),
             ),
             const SizedBox(height: 16),
             Text('Photos (up to $kMaxListingPhotos)',

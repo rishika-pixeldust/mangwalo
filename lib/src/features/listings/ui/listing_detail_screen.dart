@@ -230,6 +230,8 @@ class ListingDetailScreen extends ConsumerWidget {
                 infoRow(Icons.place_outlined, 'Landmark', listing.area),
                 infoRow(Icons.location_city_outlined, 'Locality',
                     listing.neighborhood),
+                infoRow(Icons.forum_outlined, 'Reach out',
+                    listing.contactChannel.label),
                 infoRow(Icons.event_outlined, 'Posted',
                     dateFormat.format(listing.createdAt)),
                 if (listing.borrowerName.isNotEmpty)

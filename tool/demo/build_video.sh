@@ -105,7 +105,7 @@ for i in 0 1 2 3 4 5 6; do
   frames=$(echo "($total * 30 + 1)/1" | bc)
   fadeout=$(echo "$total - 0.6" | bc)
   # Slow push-in keeps a still slide feeling alive.
-  VF="[0:v]scale=2880:1620,zoompan=z='min(zoom+0.00022,1.09)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${frames}:s=1920x1080:fps=30,fade=t=in:st=0:d=0.5,fade=t=out:st=${fadeout}:d=0.6,format=yuv420p[v]"
+  VF="[0:v]scale=2880:1620,zoompan=z='min(zoom+0.00013,1.055)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${frames}:s=1920x1080:fps=30,fade=t=in:st=0:d=0.7,fade=t=out:st=${fadeout}:d=0.6,format=yuv420p[v]"
 
   if [[ -z "$aud" ]]; then
     # Silent cut: video only, so an editor can drop a voice track underneath.
@@ -127,7 +127,52 @@ mkdir -p ../../docs/media
 OUT="${MANGWALO_OUT:-../../docs/media/mangwalo-demo.mp4}"
 [[ "$MODE" == "none" && -z "${MANGWALO_OUT:-}" ]] \
   && OUT=../../docs/media/mangwalo-demo-silent.mp4
-ffmpeg -y -loglevel error -f concat -safe 0 -i segments/list.txt -c copy "$OUT"
+
+# Smooth joins: cross-dissolve video and cross-fade audio at every boundary
+# instead of butt-splicing. Each segment already fades to and from its own
+# background, so a hard cut reads as a flicker; xfade absorbs it.
+#
+# Built as a chain because xfade takes exactly two inputs. Each join consumes
+# XF seconds of overlap, so the running length is tracked to place the next one.
+XF=0.5
+COUNT=${#SLIDES[@]}
+
+if (( COUNT < 2 )); then
+  ffmpeg -y -loglevel error -f concat -safe 0 -i segments/list.txt -c copy "$OUT"
+else
+  inputs=(); for ((i=0;i<COUNT;i++)); do inputs+=(-i "segments/s$i.mp4"); done
+
+  dur() { ffprobe -v error -show_entries format=duration -of csv=p=0 "$1"; }
+
+  # First join.
+  offset=$(echo "$(dur segments/s0.mp4) - $XF" | bc)
+  filter="[0:v][1:v]xfade=transition=fade:duration=$XF:offset=$offset[v1]"
+  if [[ "$MODE" != "none" ]]; then
+    filter="$filter;[0:a][1:a]acrossfade=d=$XF[a1]"
+  fi
+  running=$(echo "$(dur segments/s0.mp4) + $(dur segments/s1.mp4) - $XF" | bc)
+
+  for ((i=2;i<COUNT;i++)); do
+    offset=$(echo "$running - $XF" | bc)
+    filter="$filter;[v$((i-1))][$i:v]xfade=transition=fade:duration=$XF:offset=$offset[v$i]"
+    if [[ "$MODE" != "none" ]]; then
+      filter="$filter;[a$((i-1))][$i:a]acrossfade=d=$XF[a$i]"
+    fi
+    running=$(echo "$running + $(dur segments/s$i.mp4) - $XF" | bc)
+  done
+
+  last=$((COUNT-1))
+  if [[ "$MODE" == "none" ]]; then
+    ffmpeg -y -loglevel error "${inputs[@]}" -filter_complex "$filter" \
+      -map "[v$last]" -c:v libx264 -preset medium -crf 21 -pix_fmt yuv420p "$OUT"
+  else
+    ffmpeg -y -loglevel error "${inputs[@]}" -filter_complex "$filter" \
+      -map "[v$last]" -map "[a$last]" \
+      -c:v libx264 -preset medium -crf 21 -pix_fmt yuv420p \
+      -c:a aac -b:a 160k -ar 44100 -ac 2 "$OUT"
+  fi
+  echo "joined $COUNT segments with ${XF}s cross-dissolves"
+fi
 echo "---"
 echo "wrote $OUT"
 ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 "$OUT"

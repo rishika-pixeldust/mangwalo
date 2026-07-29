@@ -1,37 +1,37 @@
 # Voice-over script — MangWalo demo
 
-Seven segments, one per slide. Record each as a **separate file** and drop them
-in `tool/demo/audio/` as `s0`…`s6` (`.aiff`, `.wav`, `.mp3` or `.m4a` all work),
-then assemble:
+Seven segments, one per slide. Record each as a **separate file** into
+`tool/demo/audio/` as `s0`…`s6` (`.aiff`, `.wav`, `.mp3` or `.m4a`), then:
 
 ```bash
 MANGWALO_NARRATION=external ./tool/demo/build_video.sh
 ```
 
-Each slide's on-screen duration is taken from **your** audio file, so the video
-re-times itself around the voice-over — there is no manual syncing, and a
-segment that runs long simply holds its slide longer.
+Each slide's on-screen duration comes from **your** audio file, so the video
+re-times itself around the voice-over — no manual syncing, and a segment that
+runs long simply holds its slide longer. Segments are joined with 0.5s
+cross-dissolves, so leave a beat of silence at the head and tail of each take.
 
-Direction: warm, conversational Indian English. Confident but unhurried — this
-is a product walkthrough, not an advert. Let the em-dashes breathe.
+Direction: warm, conversational Indian English. Confident but unhurried — a
+product walkthrough, not an advert. Let the em-dashes breathe.
 
-| # | Slide | Segment | Words | ~Time @145wpm | App frames shown |
-|---|---|---|---|---|---|
-| 0 | `s0_intro` | Intro — what MangWalo is | 71 | 29s | 01_onboarding, 02_feed |
-| 1 | `s0b_tour` | How it works — the tour, locality, profile | 112 | 46s | 10_tutorial, 11_profile |
-| 2 | `s1_product` | 01 · Product Thinking | 78 | 32s | 03_myitems, 06_detail_lending |
-| 3 | `s2_a11y` | 02 · Accessibility | 77 | 32s | 07_a11y_scale |
-| 4 | `s3_ai` | 03 · Local AI | 85 | 35s | 04_ai_suggestions |
-| 5 | `s4_security` | 04 · Security | 97 | 40s | 05_privacy_warning, 08_settings |
-| 6 | `s5_outro` | Outro — recap and links | 44 | 18s | — |
+| # | Slide | Segment | Words | ~Time @145wpm |
+|---|---|---|---|---|
+| 0 | `s0_intro` | Intro — what MangWalo is | 71 | 29s |
+| 1 | `s0b_tour` | How it works — tour, locality, profile | 112 | 46s |
+| 2 | `s1_product` | 01 · Product loop | 78 | 32s |
+| 3 | `s2_a11y` | 02 · Accessibility | 77 | 32s |
+| 4 | `s3_ai` | 03 · Local AI | 85 | 35s |
+| 5 | `s4_security` | 04 · Security & privacy | 97 | 40s |
+| 6 | `s5_outro` | Outro — recap and links | 44 | 18s |
 
-**Total: 7 segments, ~3.9 minutes** (564 words).
+**7 segments · 564 words · ~3.9 min**
 
 ---
 
 ## Segment 0 — Intro — what MangWalo is
 
-*Slide `s0_intro` · 71 words · ~29s*
+*Slide `s0_intro` · 71 words*
 
 Meet MangWalo.
 
@@ -46,10 +46,9 @@ Built in Flutter for M A L Lab One, and live at mangwalo dot vercel dot app.
 
 No account, no server — everything stays on your device.
 
+## Segment 1 — How it works — tour, locality, profile
 
-## Segment 1 — How it works — the tour, locality, profile
-
-*Slide `s0b_tour` · 112 words · ~46s*
+*Slide `s0b_tour` · 112 words*
 
 So how do you use it?
 
@@ -66,10 +65,9 @@ And your profile shows what neighbors have said about you, and what of yours
 is currently out on loan — because reputation is what makes a stranger willing
 to hand over a four thousand rupee bag.
 
+## Segment 2 — 01 · Product loop
 
-## Segment 2 — 01 · Product Thinking
-
-*Slide `s1_product` · 78 words · ~32s*
+*Slide `s1_product` · 78 words*
 
 First, product thinking.
 
@@ -84,10 +82,9 @@ remembers who has it, and when it is due.
 
 Overdue rentals flag themselves, and jump to the top of the board.
 
-
 ## Segment 3 — 02 · Accessibility
 
-*Slide `s2_a11y` · 77 words · ~32s*
+*Slide `s2_a11y` · 77 words*
 
 Second, accessibility.
 
@@ -104,10 +101,9 @@ is the feed at nearly double size, with nothing broken.
 Dark mode is a choice, not a guess: three palettes, every one contrast-checked
 to W C A G double A.
 
-
 ## Segment 4 — 03 · Local AI
 
-*Slide `s3_ai` · 85 words · ~35s*
+*Slide `s3_ai` · 85 words*
 
 Third, local A I.
 
@@ -120,10 +116,9 @@ It is a deterministic rules engine that understands Hinglish, needs no cloud
 and no A P I keys, and works fully offline — behind a swappable Local A I
 Service boundary, ready for a real on-device model.
 
+## Segment 5 — 04 · Security & privacy
 
-## Segment 5 — 04 · Security
-
-*Slide `s4_security` · 97 words · ~40s*
+*Slide `s4_security` · 97 words*
 
 Fourth, security.
 
@@ -145,10 +140,9 @@ Renter names are first names only.
 
 And one tap in settings resets every byte of local data.
 
-
 ## Segment 6 — Outro — recap and links
 
-*Slide `s5_outro` · 44 words · ~18s*
+*Slide `s5_outro` · 44 words*
 
 That is MangWalo.
 
@@ -166,4 +160,3 @@ you can open right now.
 Try it at mangwalo dot vercel dot app.
 
 Maang lo — luxury, from your locality!
-

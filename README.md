@@ -1,128 +1,145 @@
-# MangWalo
+# MangWalo — rent luxury from your locality
 
-> **Maang lo** — just ask for it. A local-first noticeboard to **rent luxury nearby**:
-> designer bags, event & party wear, jewellery, watches, and sports kits from
-> neighbors in one Mumbai locality — with pricing, photo galleries, reviews, and an
-> on-device AI listing helper. Built for **MAL Lab 1: Flutter & Foundations**.
->
-> **Live: [mangwalo.vercel.app](https://mangwalo.vercel.app)**
+*Maang lo* — just ask. A hyperlocal noticeboard where neighbours in one Mumbai
+locality rent luxury to each other: designer bags, event and party wear,
+jewellery, watches and sports kits. Every listing carries a ₹/day rate, a photo
+gallery, and reviews that speak to the item **and** the person.
 
-Your neighbor owns the Chanel that your reception outfit deserves. You own the
-cricket kit their corporate weekend needs. MangWalo is the noticeboard in between —
-"For rent" offers and "Wanted" requests with a bold ₹/day rate on every card,
-scoped to a single neighborhood, stored entirely on your device.
+Built for **MAL Lab 1: Flutter & Foundations**, and deployed as a real
+installable PWA.
 
-## Feature tour
-
-- **Concept intro** — a three-page swipeable preview on first launch explains the
-  idea (luxury nearby · priced/pictured/reviewed · private by design); skippable.
-- **Local login** — create a profile (first name, used on listings and reviews) and
-  optionally set a 4–6 digit **app PIN** that locks MangWalo on launch. Only a
-  salted SHA-256 hash is stored; recovery is honest: reset all local data.
-- **Onboarding** — pick your neighborhood once (single-neighborhood scope); a
-  clearly-marked sample noticeboard loads automatically so the first feed is never
-  empty (removable in Settings).
-- **Feed** — browse rentals with cover photos, ₹/day price pills, and star ratings;
-  filter by type and the seven luxury categories; search titles, descriptions, and
-  landmarks; overdue rentals float to the top.
-- **My items view** — a Noticeboard / My-items split with a lending summary strip
-  ("You've lent 2 items · 1 overdue") for managing what you've put on the board.
-- **Create with an on-device AI helper** — describe the item ("sabyasachi lehenga,
-  worn once and dry cleaned") and a deterministic rule engine suggests a title,
-  category, condition tags, a rental window, and a **₹/day rate** (premium brands
-  double the base). Suggestions are chips you tap to accept — nothing is ever
-  auto-filled.
-- **Privacy guardrails** — typing a phone number or an exact address into free text
-  triggers a visible warning; the area field hard-enforces landmark-only locations.
-- **Status lifecycle** — saved → contacted → closed, independent of the item's
-  lending state (available → lent out → returned).
-- **Return-date tracking** *(the personal product feature)* — mark an item rented out
-  with a renter first name and an expected return date; the feed and detail views
-  show "Due in N days" and overdue badges, with overdue items sorted first.
-- **Pricing & deposits** — every listing carries a ₹/day rate (budget, on Wanted
-  posts) and an optional refundable deposit.
-- **Photo galleries** — up to five photos per listing, swipeable on the detail page;
-  downscaled, EXIF-stripped, stored only on the device.
-- **Reviews** — 5-star + text feedback covering the item and the person; cards show
-  the aggregate rating.
-- **Full local data control** — load/remove sample data, and "Reset all local data"
-  wipes everything.
-
-## Tech stack
-
-| Layer | Choice |
+| | |
 |---|---|
-| Framework | Flutter 3.44 (stable) / Dart 3.12 — web target, phone-frame layout on desktop |
-| State | Riverpod 3 |
-| Persistence | Hive CE (IndexedDB on web) behind a `ListingRepository` interface |
-| Local AI | Deterministic rule engine behind a `LocalAiService` interface — no model, no network, no hosted APIs |
-| Design | Material 3, "Velvet Ledger" design system (ivory + oxblood/blush + wine-black, Playfair Display + Plus Jakarta Sans), light + dark — see [design-system.md](docs/design-system.md) |
+| 🌐 **Live** | **https://mangwalo.vercel.app** |
+| 🎬 **Demo video** | [`docs/media/mangwalo-demo.mp4`](docs/media/mangwalo-demo.mp4) — narrated walkthrough of every required part |
+| 🏷️ **Graded submission** | tag `lab1-submission` — the last fully local-first commit |
+| 📄 **Voice script** | [`docs/voice-script.md`](docs/voice-script.md) |
 
-## Getting started
+Your neighbour owns the Chanel your reception outfit deserves. You own the
+cricket kit their corporate weekend needs. MangWalo is the noticeboard in
+between — "For rent" offers and "Wanted" requests, scoped to one locality.
 
-Prerequisites: [Flutter](https://docs.flutter.dev/get-started/install) 3.44+ with web
-support and Chrome.
+---
 
-```sh
+## The six required parts, and where to find each
+
+| # | Part | Implementation | Doc |
+|---|---|---|---|
+| **01** | **Product loop** | Browse one locality's board → open a listing → mark it **saved / contacted / closed** (`InteractionStatus`) → create a listing with title, category, description, landmark area and **contact preference**. Own feature: **return-date tracking** — overdue rentals badge themselves and sort to the top of the board | [`product-slice.md`](docs/product-slice.md) |
+| **02** | **Accessibility** | One merged semantics node per card; labelled controls throughout; errors are icon + text, never colour alone; 48 px targets app-wide; survives 200% text scale; contrast measured for light + **three** dark themes | [`accessibility-check.md`](docs/accessibility-check.md) |
+| **03** | **Security & privacy** | `PrivacyScanner` warns on phone numbers and addresses as you type; the area field **hard-rejects** them; sanitise-then-validate at the form *and* the repository; EXIF/GPS stripped from every photo on-device; one-tap reset of all local data; no secrets in the repo | [`security-baseline.md`](docs/security-baseline.md) |
+| **04** | **Local AI** | Deterministic rule engine behind `LocalAiService`, suggesting title, category, sub-category, condition tags, rental window and ₹/day rate. Understands Hinglish, needs no model and no API key, and works with the network disabled | [`local-ai-note.md`](docs/local-ai-note.md) |
+| **05** | **Architecture** | Feature-first `lib/src/`, one-way dependencies, local storage behind `ListingRepository`. That seam is the recorded change point — and it has since actually been used, swapping in a synced backend without the UI noticing | [`adr/0001-…`](docs/adr/0001-local-first-marketplace-slice.md) |
+| **06** | **Documentation** | All six docs, plus a metrics table where every row is a check a reviewer can run | [`success-metrics.md`](docs/success-metrics.md) |
+
+**Also here:** [`sample-data.md`](docs/sample-data.md) explains what the demo
+board proves, [`design-system.md`](docs/design-system.md) documents the Velvet
+Ledger palette and type, and [`product-roadmap.md`](docs/product-roadmap.md)
+covers what a commercial version would still need.
+
+---
+
+## Setup and run
+
+### Requirements
+
+- **Flutter 3.44+** — check with `flutter --version`. If Flutter isn't on your
+  `PATH`, use the full path to the binary.
+- Chrome, for `-d chrome`.
+
+### Run it — no credentials needed
+
+```bash
 flutter pub get
-
-# Run in debug (fixed port keeps IndexedDB data stable across relaunches)
-flutter run -d chrome --web-port=8080
-
-# Tests (73 tests: AI engine, validators, due-date math, codec, Hive repo, widgets)
-flutter test
-
-# Static analysis
-flutter analyze
-
-# Production build (CanvasKit bundled locally — no CDN dependency)
-flutter build web --release --no-web-resources-cdn   # output in build/web
-
-# Deploy (static bundle → https://mangwalo.vercel.app)
-cd build/web && vercel deploy --prod
+flutter run -d chrome
 ```
 
-## Architecture at a glance
+That is genuinely all. With no `.env` the app runs **entirely on-device**: the
+board, the sample listings, on-device AI suggestions, the privacy scanner and
+return-date tracking all work with no account and no network.
 
-```
-UI (screens, widgets)
-  │  watches
-Riverpod providers (feed filter, suggestions, settings)
-  │  reads through interfaces
-  ├── ListingRepository ──► HiveListingRepository (JSON codec → Hive CE / IndexedDB)
-  │                         InMemoryListingRepository (tests + storage fallback)
-  └── LocalAiService  ──► RuleBasedListingAi (deterministic, offline)
+### Build the release bundle
+
+```bash
+flutter build web --release --no-web-resources-cdn
 ```
 
-- Feature-first layout under `lib/src/features/` with `domain / data / application / ui`
-  boundaries; Hive is imported only by the `data/` layer and the `main.dart`
-  bootstrap that opens the boxes and injects the repositories.
-- The two seams — storage and AI — are the recorded **change points**: a synced
-  backend (phase 2) and an on-device model can each be swapped in one line.
-- Decisions and alternatives: see the ADR below.
+`--no-web-resources-cdn` bundles CanvasKit locally rather than fetching it from
+gstatic, which keeps the app self-contained and offline-capable.
 
-## Documentation
+### Optional: the shared noticeboard
 
-| Doc | What it covers |
-|---|---|
-| [Product slice](docs/product-slice.md) | Problem, target user, in/out of scope |
-| [Success metrics](docs/success-metrics.md) | Testable pass/fail metrics, incl. the return-date metric |
-| [Accessibility check](docs/accessibility-check.md) | Checklist with how-tested evidence |
-| [Security baseline](docs/security-baseline.md) | Threat/mitigation table, data minimization |
-| [Local AI note](docs/local-ai-note.md) | Helper type, boundary, fallback, honest limitations |
-| [ADR-0001](docs/adr/0001-local-first-marketplace-slice.md) | Local-first architecture decision record |
-| [Demo script](docs/demo-script.md) | Timed 3-minute demo walkthrough |
-| [Demo video](docs/media/mangwalo-demo.mp4) | 2:19 narrated walkthrough — what MangWalo is + the four Lab 1 pillars |
-| [Technical overview](docs/technical-overview.md) | Architecture, AI engine, security model, testing — for engineers ([PDF](docs/technical-overview.pdf)) |
+The app also runs against a Supabase backend — accounts, a shared board, and
+bookings with double-booking made impossible at the database level. It is
+**opt-in at build time** and fails closed to local-only mode, so a clone without
+credentials still works.
 
-## Non-goals & honesty notes
+The full walkthrough (project creation, migrations, redirect URLs, keys) is in
+**[`SETUP.md`](SETUP.md)**.
 
-- **No backend, no accounts, no sync** — this slice is deliberately single-device.
-  Listings are visible only on the device that created them; a synced backend is the
-  documented phase-2 change point behind `ListingRepository`.
-- **The "AI" is a deterministic rule engine** — keyword dictionaries and price tables tuned to the
-  luxury-rental domain (Hinglish included), not a machine-learning model. That is
-  exactly what makes it private, offline, and predictable; the `LocalAiService`
-  interface is where a real on-device model would plug in.
-- **Sample data is fake** — every sample listing is flagged, uses initials + common
-  surnames, and contains no real contact details.
+```bash
+cp .env.example .env        # then fill in your own values
+flutter run -d chrome --dart-define-from-file=.env
+```
+
+> `.env` is gitignored. Only *public* values belong in it — the project URL and
+> the **publishable** key, both of which ship inside the web bundle and are
+> guarded by Row Level Security. Never the `service_role` or `sb_secret_…` key.
+
+### Verify
+
+```bash
+flutter analyze     # expect: No issues found!
+flutter test        # expect: All tests passed!   (153 tests)
+```
+
+### Regenerate the demo assets
+
+```bash
+python3 tool/make_seed_images.py                                    # sample imagery
+flutter test tool/demo/capture_screens_test.dart --update-goldens    # app frames
+./tool/demo/build_video.sh                                          # narrated video
+```
+
+The video takes its narration from any source — see
+[`voice-script.md`](docs/voice-script.md) for the script and timings:
+
+```bash
+MANGWALO_VOICE="Rishi (Enhanced)" ./tool/demo/build_video.sh   # a better local voice
+MANGWALO_NARRATION=external       ./tool/demo/build_video.sh   # your own recordings
+MANGWALO_NARRATION=none           ./tool/demo/build_video.sh   # silent cut
+```
+
+---
+
+## How it is put together
+
+```
+lib/src/
+  core/          clock, money, validation (sanitizer, validators, privacy
+                 scanner), images (downscale + EXIF strip), shared widgets, config
+  theme/         Velvet Ledger — hand-mapped ColorSchemes, three dark variants
+  features/
+    listings/    domain (Listing, FeedFilter, DueInfo, DateRange)
+                 data   (ListingRepository ← Hive | Supabase | in-memory)
+                 application (Riverpod providers, form + suggestion controllers)
+                 ui     (board, detail, form, cards, gallery)
+    ai/          LocalAiService boundary + deterministic rule engine
+    bookings/    date-range booking domain, source, availability calendar
+    auth/        session state over Supabase auth
+    settings/    preferences, profile, locality, themes
+    onboarding/  concept intro + replayable coach-mark tour
+supabase/migrations/   schema, RLS policies, storage buckets
+docs/                  the six required docs, plus design and roadmap
+tool/demo/             golden capture → slides → narrated video
+```
+
+**Dependency rule:** `ui → application → domain ← data`. Nothing outside
+`*/data/` knows that Hive or Supabase exists — which is exactly what let the
+storage layer be swapped for a synced backend with no change to the UI.
+
+## Stack
+
+Flutter web · Riverpod 3 · Hive CE (local) · Supabase (optional shared board) ·
+deterministic on-device AI · no codegen · Playfair Display + Plus Jakarta Sans,
+both bundled so nothing is fetched at runtime.

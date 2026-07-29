@@ -10,6 +10,7 @@ void main() {
     description: 'Kashmir-willow bat, lightly taped handle.',
     category: Category.sportsKits,
     subCategory: 'Cricket',
+    contactChannel: ContactChannel.buildingWhatsApp,
     conditionTags: const ['Gently used'],
     area: 'Opposite Jogger\'s Park',
     neighborhood: 'Bandra West',
@@ -133,18 +134,30 @@ void main() {
       expect(decoded.status, InteractionStatus.saved);
     });
 
-    test('v2 contact fields are dropped, not migrated', () {
+    test('contact preference survives, the free-text note does not', () {
       final decoded = ListingCodec.fromJsonMap({
         'id': 'v2-row',
-        'title': 'Row with retired fields',
+        'title': 'Row with a retired note',
         'contactChannel': 'buildingWhatsApp',
         'contactNote': 'R. Nair — building group, ring twice',
       })!;
-      // Re-encoding must not resurrect them: in-app messaging replaced both.
+      // The preference is a closed enum and is kept; the free-text note was
+      // the likeliest place a phone number ended up, so it is never read and
+      // never re-emitted.
+      expect(decoded.contactChannel, ContactChannel.buildingWhatsApp);
       final reEncoded = ListingCodec.toJsonMap(decoded);
-      expect(reEncoded.containsKey('contactChannel'), isFalse);
+      expect(reEncoded['contactChannel'], 'buildingWhatsApp');
       expect(reEncoded.containsKey('contactNote'), isFalse);
       expect(reEncoded['v'], 3);
+    });
+
+    test('an unknown contact preference falls back safely', () {
+      final decoded = ListingCodec.fromJsonMap({
+        'id': 'weird-contact',
+        'title': 'Weird contact',
+        'contactChannel': 'carrier_pigeon',
+      })!;
+      expect(decoded.contactChannel, ContactChannel.societyBoard);
     });
 
     test('over-long free-text sub-category is capped at the storage boundary',

@@ -16,6 +16,7 @@ abstract final class ListingCodec {
         'conditionTags': l.conditionTags,
         'area': l.area,
         'neighborhood': l.neighborhood,
+        'contactChannel': l.contactChannel.name,
         'pricePerDayInr': l.pricePerDayInr,
         'depositInr': l.depositInr,
         'status': l.status.name,
@@ -80,9 +81,12 @@ abstract final class ListingCodec {
             const <String>[],
         area: map['area'] as String? ?? '',
         neighborhood: map['neighborhood'] as String? ?? '',
-        // v1/v2 `contactChannel` and `contactNote` are intentionally NOT read:
-        // in-app messaging replaced them, so the values are dropped on the
-        // next write rather than migrated.
+        contactChannel: _enumByName(ContactChannel.values,
+            map['contactChannel'] as String?, ContactChannel.societyBoard),
+        // `contactNote` stays deliberately unread: a free-text contact field
+        // is the likeliest place a phone number ends up, so legacy values are
+        // dropped rather than migrated. The preference above carries the
+        // intent without ever holding a digit.
         pricePerDayInr: (map['pricePerDayInr'] as num?)?.toInt() ?? 0,
         depositInr: (map['depositInr'] as num?)?.toInt(),
         status: _enumByName(InteractionStatus.values, map['status'] as String?,

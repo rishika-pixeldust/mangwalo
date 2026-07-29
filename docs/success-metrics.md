@@ -14,8 +14,12 @@ Each metric is a testable statement with a pass/fail check a reviewer can run.
 | 8 | Reliability | The complete 3-minute demo script runs twice consecutively with zero crashes or manual resets | Double demo run before Lab 2 |
 | 9 | **Project-specific: return-date tracking** | A listing marked lent-out with due date D shows "Due in N days" while D ≥ today and an overdue badge once D < today, in **both** feed and detail, and overdue items sort to the top of the feed | One past-due + one due-soon sample listing at first load; `test/domain/due_info_test.dart` covers the day-boundary math |
 
+| 10 | **Booking integrity** | Two overlapping confirmed bookings for one listing are impossible — the second is refused by the database, not merely hidden by the UI | `EXCLUDE USING gist` on `bookings`; driven against the live project inside a rolled-back transaction (overlap refused, competing *requests* still allowed, back-to-back accepted) |
+| 11 | **Shared-board safety** | An unauthenticated client can read nothing and write nothing; a signed-in client cannot write a row owned by anyone else | RLS probes: anonymous read returns `[]`, anonymous write `42501`, spoofed `owner_id` refused `403` from inside the running app |
+
 ## Notes
 
-- Metrics 3, 4, 5, 6, and 9 are additionally locked in by the automated test suite
-  (59 tests) — `flutter test` green is a precondition for calling the slice done.
+- Metrics 3, 4, 5, 6, 9, 10 and 11 are locked in by the automated suite
+  (**153 tests**) plus the live database probes — `flutter analyze` clean and
+  `flutter test` green are preconditions for calling the slice done.
 - Metric 1 measured from "Get started" availability, not network load time.

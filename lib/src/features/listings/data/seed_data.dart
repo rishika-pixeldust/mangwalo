@@ -51,6 +51,7 @@ Future<List<Listing>> buildSampleListings({
     String subCategory = '',
     List<String> conditionTags = const [],
     required String area,
+    ContactChannel contactChannel = ContactChannel.societyBoard,
     required int pricePerDayInr,
     int? depositInr,
     InteractionStatus status = InteractionStatus.saved,
@@ -74,6 +75,7 @@ Future<List<Listing>> buildSampleListings({
       conditionTags: conditionTags,
       area: area,
       neighborhood: neighborhood,
+      contactChannel: contactChannel,
       pricePerDayInr: pricePerDayInr,
       depositInr: depositInr,
       status: status,
@@ -123,6 +125,7 @@ Future<List<Listing>> buildSampleListings({
     await sample(
       type: ListingType.offer,
       title: 'Sabyasachi bridal lehenga',
+      contactChannel: ContactChannel.buildingWhatsApp,
       description: 'Deep red silk with hand embroidery, worn once and dry '
           'cleaned. Blouse alterable. For the sangeet or the big day itself.',
       category: Category.eventWear,
@@ -308,6 +311,7 @@ Future<List<Listing>> buildSampleListings({
     await sample(
       type: ListingType.offer,
       title: 'Callaway half set with bag',
+      contactChannel: ContactChannel.inPerson,
       description: 'Right-handed Callaway half set, stand bag included. '
           'Regripped this season — ready for the fairway.',
       category: Category.sportsKits,

@@ -100,6 +100,29 @@ extension LendingStateLabel on LendingState {
       };
 }
 
+/// How the owner prefers to be approached for the handover.
+///
+/// A closed set of options, never free text. The earlier design also had a
+/// free-text "contact note", which was removed and stays removed: it was the
+/// single field most likely to carry a phone number, and the privacy scanner
+/// existed largely to police it. A preference expresses the same intent
+/// without ever holding a digit.
+enum ContactChannel { inPerson, societyBoard, buildingWhatsApp }
+
+extension ContactChannelLabel on ContactChannel {
+  String get label => switch (this) {
+        ContactChannel.inPerson => 'In person',
+        ContactChannel.societyBoard => 'Society notice board',
+        ContactChannel.buildingWhatsApp => 'Building WhatsApp group',
+      };
+
+  String get hint => switch (this) {
+        ContactChannel.inPerson => 'Meet to hand over directly',
+        ContactChannel.societyBoard => 'Leave a note on the board',
+        ContactChannel.buildingWhatsApp => 'Ask in the building group',
+      };
+}
+
 /// A renter's feedback on a listing: one 5-star rating plus text that can
 /// speak to the item ("pristine, exactly as pictured") and the person
 /// ("returned on time, lovely to deal with"). First names only.
@@ -146,6 +169,7 @@ class Listing {
     this.conditionTags = const <String>[],
     required this.area,
     required this.neighborhood,
+    this.contactChannel = ContactChannel.societyBoard,
     required this.pricePerDayInr,
     this.depositInr,
     this.status = InteractionStatus.saved,
@@ -179,6 +203,9 @@ class Listing {
   /// Landmark-level location only — never an exact address.
   final String area;
   final String neighborhood;
+
+  /// How the owner prefers to be approached. An enum, never free text.
+  final ContactChannel contactChannel;
 
   /// Rental rate in whole rupees per day — bold on every card.
   final int pricePerDayInr;
@@ -233,6 +260,7 @@ class Listing {
     List<String>? conditionTags,
     String? area,
     String? neighborhood,
+    ContactChannel? contactChannel,
     int? pricePerDayInr,
     Object? depositInr = _unset,
     InteractionStatus? status,
@@ -255,6 +283,7 @@ class Listing {
       conditionTags: conditionTags ?? this.conditionTags,
       area: area ?? this.area,
       neighborhood: neighborhood ?? this.neighborhood,
+      contactChannel: contactChannel ?? this.contactChannel,
       pricePerDayInr: pricePerDayInr ?? this.pricePerDayInr,
       depositInr:
           identical(depositInr, _unset) ? this.depositInr : depositInr as int?,
@@ -319,6 +348,7 @@ class Listing {
         listEquals(other.conditionTags, conditionTags) &&
         other.area == area &&
         other.neighborhood == neighborhood &&
+        other.contactChannel == contactChannel &&
         other.pricePerDayInr == pricePerDayInr &&
         other.depositInr == depositInr &&
         other.status == status &&
